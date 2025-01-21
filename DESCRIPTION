@@ -1,0 +1,23 @@
+Package: seabORD
+Title: seabORD
+Version: 2.0.0
+Authors@R: 
+    c(person(given = "Deena", family = "Mobbs", role = c("aut", "cre"), email = "dcmo@ceh.ac.uk"),
+      person(given = "Kate", family = "Searle", role = c("ctb")),
+      person(given = "Adam", family = "Butler", role = c("ctb")),
+      person(given = "Christopher", family = "Pollock", role = c("ctb")))
+Description: A model to estimate the population consequences of displacement from proposed offshore renewable energy developments for key seabird species
+Maintainer: Deena Mobbs <dcmo@ceh.ac.uk>
+License: OGL
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
+LazyData: true

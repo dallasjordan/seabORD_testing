@@ -1,0 +1,48 @@
+url: ~
+template:
+  bootstrap: 5
+  bslib:
+    bg: "#fff"
+    fg: "#292C2F"
+    primary: "#0483A4"
+    base_font:  {google: "Montserrat"}
+    heading_font: {google: "Montserrat"}
+    code_font: {google: "JetBrains Mono"}
+reference:
+- title: "Functions to run the model"
+  contents:
+  - seabord
+  - set_seedvalues
+  - set_medianprey
+  - set_initialbirdtype
+  - set_initialchickstate
+  - set_initialbirdstate
+- title: "Main functions behind the seabORD model"
+  contents:
+  - calc_adultbmchange
+  - calc_adultdee
+  - calc_pSurvival
+  - calc_puffinmortality
+  - calc_chickcare
+  - calc_othermortality
+  - calc_unattendmortality
+  - calc_strategy
+  - calc_foragecapture
+- title: "Datasets available"
+  contents:
+  - example_1_lists
+  - specieslist
+  - spalist
+  - CEF_colsize_table
+  - energeticsandpreydata
+  - BrdData_example
+  - frgcompdata_example
+  - cef_coast_4326
+  - seamask_3035_example
+  - spacoordinates
+  - UK9004171_bysea_3035
+  - FlightGridcorrection_3035
+  - offshorerenewabledevelopmentnames
+  - ORDpoly_example
+
+

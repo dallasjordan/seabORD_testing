@@ -1,0 +1,23 @@
+---
+title: "Example seabORD calibration"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example seabORD calibration}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(seabORD)
+```
+
+# Prepare for the run
+
+# Calibrate the model

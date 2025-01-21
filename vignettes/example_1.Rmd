@@ -66,7 +66,7 @@ theme_bslib <- ggplot2::theme(
 To run seabORD several inputs are needed:
 
 | arguments | type | description |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Par | List | The main parameters controlling/defining this run |
 | modPar | List | Parameters relating to the model mode and computer environment |
 | ordPar | List | Input parameters relating to the ORDs |

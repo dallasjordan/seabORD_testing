@@ -1,0 +1,39 @@
+---
+title: "workshop"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{workshop}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# How to install seabORD
+
+*must have: RStudio with up to date R*
+
+1.  unzip folder on computer and know the path to it (e.g.,):
+
+    "C:/Users/madtig/Desktop/seabORD_pkg-main"
+
+2.  open R Studio (not in the project of the zip file necessarily; just opening R should be enough)
+
+3.  run in the console (with the right path
+
+``` R
+install.packages(pkgs = "C:/Users/madtig/Desktop/seabORD_pkg-main", repos = NULL, type = "source")
+```
+
+4.  load the package in an R script:
+
+``` R
+library("seabORD")
+```
+
+5.  you can now follow the exmaple

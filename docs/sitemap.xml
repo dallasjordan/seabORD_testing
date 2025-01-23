@@ -4,31 +4,31 @@
     <loc>/404.html</loc>
   </url>
   <url>
-    <loc>/articles/default.html</loc>
+    <loc>/articles/A_workshop.html</loc>
   </url>
   <url>
-    <loc>/articles/example_1.html</loc>
+    <loc>/articles/B_explanation_model.html</loc>
   </url>
   <url>
-    <loc>/articles/example_2.html</loc>
+    <loc>/articles/C_exampleKI_calib.html</loc>
   </url>
   <url>
-    <loc>/articles/explanation-of-the-model.html</loc>
+    <loc>/articles/D_exampleKI_run.html</loc>
   </url>
   <url>
-    <loc>/articles/FAQs.html</loc>
+    <loc>/articles/E_exampleKI_output.html</loc>
+  </url>
+  <url>
+    <loc>/articles/F_main_functions.html</loc>
+  </url>
+  <url>
+    <loc>/articles/G_species_default.html</loc>
+  </url>
+  <url>
+    <loc>/articles/H_FAQs.html</loc>
   </url>
   <url>
     <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/articles/main-functions-behind-model.html</loc>
-  </url>
-  <url>
-    <loc>/articles/read-the-output.html</loc>
-  </url>
-  <url>
-    <loc>/articles/workshop.html</loc>
   </url>
   <url>
     <loc>/authors.html</loc>

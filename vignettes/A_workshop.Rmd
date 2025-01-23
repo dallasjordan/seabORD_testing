@@ -26,13 +26,13 @@ knitr::opts_chunk$set(
 
 3.  run in the console (with the right path
 
-``` R
+``` r
 install.packages(pkgs = "C:/Users/madtig/Desktop/seabORD_pkg-main", repos = NULL, type = "source")
 ```
 
 4.  load the package in an R script:
 
-``` R
+``` r
 library("seabORD")
 ```
 

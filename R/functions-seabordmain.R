@@ -123,7 +123,7 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
 
   # > Make a reference grid for the Raster*
   base_grid <- raster::raster()
-  crs(base_grid) <- crs(seamask)
+  crs(base_grid) <- raster::crs(seamask)
   extent(base_grid) <- extent(seamask)
   raster::ncol(base_grid) <- raster::ncol(seamask)
   raster::nrow(base_grid) <- raster::nrow(seamask)

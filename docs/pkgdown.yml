@@ -2,13 +2,13 @@ pandoc: '3.2'
 pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
-  default: default.html
-  example_1: example_1.html
-  example_2: example_2.html
-  explanation-of-the-model: explanation-of-the-model.html
-  FAQs: FAQs.html
-  main-functions-behind-model: main-functions-behind-model.html
-  read-the-output: read-the-output.html
-  workshop: workshop.html
-last_built: 2025-01-22T16:35Z
+  A_workshop: A_workshop.html
+  B_explanation_model: B_explanation_model.html
+  C_exampleKI_calib: C_exampleKI_calib.html
+  D_exampleKI_run: D_exampleKI_run.html
+  E_exampleKI_output: E_exampleKI_output.html
+  F_main_functions: F_main_functions.html
+  G_species_default: G_species_default.html
+  H_FAQs: H_FAQs.html
+last_built: 2025-01-23T12:34Z
 

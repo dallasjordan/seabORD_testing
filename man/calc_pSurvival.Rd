@@ -31,6 +31,6 @@ expected survival and parameters. Baseline survival values may apply to
 poor, moderate or good years.
 }
 \examples{
-  calc_pSurvival("KI", 345.9, 370.8, 0.8, 0.038)
+  calc_pSurvival("KI", 345.9, 370.8, 0.8, 0.038, 0)
   calc_pSurvival("GU", 345.9, 370.8, 0.92, 1.03, 50)
 }

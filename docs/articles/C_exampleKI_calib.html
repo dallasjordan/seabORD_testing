@@ -86,11 +86,52 @@
 
     
     
+<p>Load the seabORD package</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">seabORD</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span></span>
+<span><span class="co"># load seabORD</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">seabORD</span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="introduction-background">Introduction &amp; background<a class="anchor" aria-label="anchor" href="#introduction-background"></a>
+</h2>
+<p>A key component of the seabORD model is the need to calibrate the
+prey level inputs used for each new species and colony combination. This
+currently involves re-running the model without ORDs (baseline
+simulations) with a range of prey levels to ascertain the range of
+values within which the model returns adult mass and chick mortality
+rates consistent with pre-defined values representing “moderate”
+conditions (Figure 1). This is to allow simulation of the range of
+outcomes expected under these conditions, as the model is highly
+sensitive to the prey density parameter.</p>
+<div class="float">
+<img src="images/Calibration_plot_schematic_extended_seabordpkg.png" alt="Figure 1: : Schematic plot of kittiwake adult mass loss (A) and chicks per nest (B) withdrawn from 300 baseline simulations (no ORD footprints) ranging from a prey value of 50 up to 250. The red lines are for smoothed model outputs, which are overlaid on grey points indicating the individual estimates. For calibration we have upper and lower bound for each output (A &amp; B) which are picked to reflect “moderate” conditions, i.e., what is observed in a typical year for kittiwakes at the Isle of May, and these are indicates by the dashed grey horizontal lines. The grey shaded blocks indicate where the respective outputs fall within these bound, and the light blue shaded block indicates the prey values where there is overlap between the estimates, which is the prey range used in subsequent simulations with ORDs included."><div class="figcaption">Figure 1: : Schematic plot of kittiwake adult
+mass loss (A) and chicks per nest (B) withdrawn from 300 baseline
+simulations (no ORD footprints) ranging from a prey value of 50 up to
+250. The red lines are for smoothed model outputs, which are overlaid on
+grey points indicating the individual estimates. For calibration we have
+upper and lower bound for each output (A &amp; B) which are picked to
+reflect “moderate” conditions, i.e., what is observed in a typical year
+for kittiwakes at the Isle of May, and these are indicates by the dashed
+grey horizontal lines. The grey shaded blocks indicate where the
+respective outputs fall within these bound, and the light blue shaded
+block indicates the prey values where there is overlap between the
+estimates, which is the prey range used in subsequent simulations with
+ORDs included.</div>
+</div>
+<div class="section level3">
+<h3 id="this-example">This example<a class="anchor" aria-label="anchor" href="#this-example"></a>
+</h3>
+<p>In this example we will run 20 baseline runs (no wind farm footprints
+included) with a range of prey values and plot the outputs in attempt to
+capture “moderate” conditions for kittiwakes at the Isle of May.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="prepare-for-the-run">Prepare for the run<a class="anchor" aria-label="anchor" href="#prepare-for-the-run"></a>
 </h2>
+<p>To run seabORD several inputs are needed:</p>
+<p><em>[include table here when updated in the scenario
+example]</em></p>
 </div>
 <div class="section level2">
 <h2 id="calibrate-the-model">Calibrate the model<a class="anchor" aria-label="anchor" href="#calibrate-the-model"></a>

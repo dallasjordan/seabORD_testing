@@ -34,6 +34,9 @@
 #'
 #' @importFrom dplyr group_by group_vars across contains n relocate
 #' @importFrom purrr map
+#' @importFrom magrittr %>%
+#' @importFrom stats sd
+#' @importFrom tibble tibble
 #'
 #' @return A list; adults and survival. Survival has 3 tibbles for poor,
 #'   moderate and good seasons.
@@ -188,6 +191,9 @@ calc_finalby <- function(indata, by = NULL){
 #' @importFrom dplyr n starts_with ends_with across everything bind_cols filter
 #' @importFrom forcats fct_relabel fct_count
 #' @importFrom tidyr pivot_wider
+#' @importFrom magrittr %>%
+#' @importFrom stats sd
+#' @importFrom tibble tibble
 #'
 #' @return A tibble with one row (or empty tibble)
 #'
@@ -246,6 +252,13 @@ dasummary <- function (data, r, s, t, p) {
 #' @param t The current time step
 #' @param p The median prey for the year
 #'
+#' @importFrom dplyr bind_cols contains n across
+#' @importFrom forcats fct_relabel fct_count
+#' @importFrom magrittr %>%
+#' @importFrom tidyr pivot_wider
+#' @importFrom stats sd
+#' @importFrom tibble tibble
+#'
 #' @return A tibble with one row (or empty tibble)
 #' @noRd
 
@@ -296,6 +309,10 @@ dcsummary <- function (data, r, s, t, p) {
 #' @param r The replicate number
 #' @param s The season type, base or scen
 #' @param t The current time step
+#'
+#' @importFrom magrittr %>%
+#' @importFrom dplyr bind_cols contains n across
+#' @importFrom tibble tibble
 #'
 #' @return A tibble with one row (or empty tibble)
 #' @noRd
@@ -356,6 +373,10 @@ dfsummary <- function (data, r, s, t) {
 #' @param s The season type, base or scen
 #' @param p The median prey for the year
 #'
+#' @importFrom magrittr %>%
+#' @importFrom dplyr bind_cols contains n across
+#' @importFrom tibble tibble
+#'
 #' @return A tibble with one row (or empty tibble)
 #' @noRd
 
@@ -402,6 +423,8 @@ yasummary <- function (data, r, s, p) {
 #'
 #' @param bycol Include output grouped by colony? (Logical)
 #' @param bych Grouped by status of chick? (logical)
+#'
+#' @importFrom magrittr %>%
 #'
 #' @return A list containing two tibbles; one holding the individual blank
 #' recording sheet and one for the metadata.
@@ -510,6 +533,8 @@ create_stepsheeta <- function(bycol = FALSE, bych = FALSE) {
 #'
 #' @param bycol Include output grouped by colony? (Logical)
 #'
+#' @importFrom magrittr %>%
+#'
 #' @return A list containing two tibbles; one holding the individual blank
 #'   recording sheet and one for the metadata.
 #'
@@ -582,6 +607,8 @@ create_stepsheetc <- function(bycol = FALSE) {
 #'   flights, optionally by colony.
 #'
 #' @param bycol Include output grouped by colony? (Logical)
+#'
+#' @importFrom magrittr %>%
 #'
 #' @return A list containing two tibbles; one holding the individual blank
 #'   recording sheet and one for the metadata.
@@ -719,6 +746,8 @@ create_flightsheet <- function(N) {
 #' @param bycol Include output grouped by colony? (Logical)
 #' @param bysus Include output grouped by susceptibility? (Logical)
 #'
+#' @importFrom magrittr %>%
+#'
 #' @return A list containing two tibbles; one holding the individual blank
 #' recording sheet and one for the metadata.
 #'
@@ -798,6 +827,7 @@ create_yearsheet <- function(bycol = FALSE, bysus = TRUE) {
 #' @return A list containing tibbles
 #'
 #' @importFrom dplyr contains
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #'   create_summarylist()
@@ -991,6 +1021,8 @@ create_summarylist <- function(bycol = FALSE, byi = FALSE, byall = FALSE){
 #'
 #' @param inlist The SeabORD output list containing previous output
 #' @param newdata New output to be added to the full list
+#'
+#' @importFrom dplyr bind_rows
 #'
 #' @return A revised full list with an extra row in the appropriate tibbles
 #'

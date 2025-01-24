@@ -1,8 +1,8 @@
 ---
-title: "workshop"
+title: "Workshop"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{workshop}
+  %\VignetteIndexEntry{Workshop}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

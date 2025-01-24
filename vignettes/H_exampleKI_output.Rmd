@@ -1,0 +1,21 @@
+---
+title: "Example kittiwake:  step 4 - interpreting the outputs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example kittiwake:  step 4 - interpreting the outputs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+csl: apa.csl
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, warning = FALSE, message = FALSE}
+library(seabORD)
+```

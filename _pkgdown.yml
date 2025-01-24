@@ -28,6 +28,7 @@ reference:
   - calc_unattendmortality
   - calc_strategy
   - calc_foragecapture
+  - memoised_calc_foragecapture
 - title: "Datasets available"
   contents:
   - example_1_lists

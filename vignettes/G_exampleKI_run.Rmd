@@ -1,0 +1,570 @@
+---
+title: "Example kittiwake:  step 3.2 - seabORD run - GPS maps"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example kittiwake:  step 3.2 - seabORD run - GPS maps}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, warning = FALSE, message = FALSE, echo=FALSE}
+#load seabORD
+library(seabORD)
+```
+
+```{r, echo= FALSE}
+library(magrittr) #used for ggplotting but users won't need this
+```
+
+Before following this example, the model is assumed to be already calibrated. If not follow the article on calibration before running this example.
+
+```{r, echo=FALSE}
+
+### UK outline
+
+#uk_map <- dplyr::select(
+  #rnaturalearth::ne_countries(country = "United Kingdom",
+                              #scale = "medium",
+                              #returnclass = "sf"),
+  #name,
+  #geometry)
+
+#use coastline
+uk_map <- seabORD::cef_coast_4326
+
+
+### theme definition
+sysfonts::font_add_google("Montserrat", "montserrat")  # Base and heading font
+sysfonts::font_add_google("JetBrains Mono", "jetbrains_mono")  # Code font
+showtext::showtext_auto()
+
+theme_bslib <- ggplot2::theme(
+  plot.background = ggplot2::element_rect(fill = "#fff", color = NA),       # Background color
+  panel.background = ggplot2::element_rect(fill = "#EAEFEC", color = NA),  # Panel background (secondary)
+  panel.grid.major = ggplot2::element_line(color = "#EAEFEC"),             # Major grid lines
+  panel.grid.minor = ggplot2::element_line(color = "#EAEFEC"),             # Minor grid lines
+  axis.text = ggplot2::element_text(color = "#292C2F", family = "montserrat"),  # Axis text (foreground and font)
+  axis.title = ggplot2::element_text(color = "#292C2F", family = "montserrat"), # Axis titles
+  plot.title = ggplot2::element_text(color = "#0483A4", family = "montserrat", size = 16, face = "bold", hjust = 0.5), # Title
+  legend.background = ggplot2::element_rect(fill = "#fff", color = NA),    # Legend background
+  legend.key = ggplot2::element_rect(fill = "#EAEFEC", color = NA),        # Legend key
+  legend.text = ggplot2::element_text(color = "#292C2F", family = "montserrat"), # Legend text
+  plot.caption = ggplot2::element_text(color = "#292C2F", family = "jetbrains_mono"),
+  axis.title.x = ggplot2::element_blank(),  # Remove x-axis label
+  axis.title.y = ggplot2::element_blank(),# Caption for code font
+)
+```
+
+# Preparing the inputs
+
+To run seabORD several inputs are needed:
+
+| arguments | type | description |
+|------------------------|------------------------|------------------------|
+| Par | List | The main parameters controlling/defining this run |
+| modPar | List | Parameters relating to the model mode and computer environment |
+| ordPar | List | Input parameters relating to the ORDs |
+| switches | List | A set of switches/flags used to control optional features of the run |
+| seamask | Raster | land/sea grid, 1km expected. |
+| spadat1 |  | description TBC |
+| spadat2 |  | description TBC |
+| spdat |  | Species-specific parameters |
+| BrdData |  | description TBC |
+| FrgCompData |  | description TBC |
+| fltdist_base |  | Flight distance by sea, without ORDs. See user guide for details. |
+| FlightGridcorrection |  | Flight distance transition layer (gdistance) |
+| ORDpoly |  | The ORD footprints |
+
+The package comes with some example input data to run the model with. Here's an example run of the model with detailed explanation for each input argument.
+
+## Par
+
+List for biological parameters:
+
+-   thisSpecies:
+
+-   colonies:
+
+-   Nscalefactor:
+
+-   Prob_Displacement
+
+-   Prob_Barrier
+
+-   PreyType
+
+-   collision
+
+-   SiteSelectionMethod
+
+-   MaxDistancekm
+
+-   PropInRange
+
+-   Npairspercol
+
+-   Pmedian
+
+```{r}
+Par_example <-  seabORD::example_1_lists$Par
+
+str(Par_example)
+```
+
+## modPar
+
+List for model parameters.
+
+-   Nparallel
+
+-   initialseed
+
+-   reference
+
+-   outputdir
+
+-   Nreplicates
+
+make a folder in the directory to store your output (you can place it wherever)
+
+```{r}
+# Create the ouput folder "output_seabORD" if not existing already
+if (!dir.exists("output_seabORD")) {
+  dir.create("output_seabORD")
+}
+```
+
+and then the list of modPar
+
+```{r}
+modPar_example <- seabORD::example_1_lists$modPar
+
+str(modPar_example)
+```
+
+## ordPar
+
+List for wind farm parameters
+
+-   include_ORDs
+
+-   parnames
+
+-   FootprintBorder
+
+-   BufferZone
+
+```{r}
+ordPar_example <-  seabORD::example_1_lists$ordPar
+
+str(ordPar_example)
+```
+
+## Switches
+
+This parameter requires a llist() object that defines the optional features of the run. It accepts the following options:
+
+-   **environment** : "serial" or "parallel"
+
+-   **modelmode**: "scenario" or "calibration"
+
+-   **debugmode**: 0, 1, or 2
+
+-   **bycol**: TRUE or FALSE
+
+-   **bysus**: TRUE or FALSE
+
+-   **bych**: TRUE or FALSE
+
+-   **printdaily**: TRUE or FALSE
+
+-   **printseason**: TRUE or FALSE
+
+-   **printpair**: TRUE or FALSE
+
+-   **minout**: TRUE or FALSE
+
+-   **silent**: TRUE or FALSE
+
+-   **saverds**: TRUE or FALSE
+
+-   **savebirdflightmap**: TRUE or FALSE
+
+There is an example list available in the package that can be accessed by simply call in the built-in list "example_switch_list":
+
+```{r}
+
+#get the example switches list
+switches_example <- seabORD::example_1_lists$switches
+
+#check the setting of this example
+str(switches_example)
+```
+
+In this example seabORD will in serial and in scenario mode; without debugging and by saving the output as a .rds file.
+
+## seamask
+
+Example data to be used as seamask can be found built in the package as "seamask_3035_example" to make the raster for the seamask:
+
+```{r}
+example_data_seamask <- seabORD::seamask_3035_example
+str(example_data_seamask)
+```
+
+We can use this data to make the raster using the **raster** package
+
+```{r, warning=FALSE, message=FALSE}
+
+#make a raster with the right dimension/proj/extents etc.
+seamask_example <- 
+  raster::raster(
+    nrows = example_data_seamask$metadata[["n_rows"]],
+    ncols = example_data_seamask$metadata[["n_cols"]],
+    xmn = example_data_seamask$metadata[["x_min"]],
+    xmx = example_data_seamask$metadata[["x_max"]],
+    ymn = example_data_seamask$metadata[["y_min"]],
+    ymx = example_data_seamask$metadata[["y_max"]],
+    crs = example_data_seamask$metadata[["crs"]]
+)
+
+#fill it with the data available
+seamask_example <- raster::setValues(seamask_example, #the raster
+                                     example_data_seamask$matrix) #the values
+#Set the name of the layer
+names(seamask_example) <- "seamask_3035"
+
+```
+
+which looks like:
+
+```{r, echo = FALSE}
+
+seamask_example_repr <- 
+  terra::rast(seamask_example) %>%
+  terra::project(terra::crs(uk_map))
+  
+seamask_df <- as.data.frame(seamask_example_repr, xy = TRUE)
+
+# Plot
+ggplot2::ggplot() +
+  ggplot2::geom_raster(data = seamask_df, ggplot2::aes(x = x, y = y, fill = seamask_3035)) +
+  #uk outline
+ ggplot2::geom_sf(data = uk_map, fill = NA, color = "#D63333", size = 0.5) +
+ggplot2::scale_fill_gradient(
+    low = "#0483A4",   # Color for 0
+    high = "#0483A4",  # Keep the same for continuous scale since values are only 0
+    na.value = "gray80",  # Color for NA values
+    guide = ggplot2::guide_colorbar(na.translate = TRUE, title = "Value")  # Add NA to legend
+  ) +
+ theme_bslib +  #palette theme
+ ggplot2::labs(fill = "Seamask Raster Value",
+               title = "coasts (red) and seamask (blue)",
+               caption = "Example 1: data seamask")
+```
+
+## spadat1
+
+For this example the values for spadat1 for the site "UK9004171" are taken from the built-in dataset "spacoordinates" which has data for all the sites relevant for the CEF. Get only what's relevant for this example.
+
+```{r}
+#open the dataset provided with the pacakge
+spadat1_example <- 
+  tibble::as_tibble( #as a tibble
+      dplyr::filter(seabORD::spacoordinates, #the full dataset
+                    SITECODE == "UK9004171") #the iste of interest
+  )
+
+print(t(spadat1_example)) #display the data for the example site
+```
+
+## spadat2
+
+Can be derived from "spalist"
+
+```{r}
+spadat2_example <- 
+  tibble::as_tibble( #as a tibble
+    dplyr::filter(seabORD::spalist, #the whole list
+                  SITE_CODE == "UK9004171") #the site of interest
+    )
+
+#take a look
+print(t(spadat2_example))
+```
+
+## spdat
+
+The species specific data for the Black-legged Kittiwake be derived from the built in dataset "energeticsandpreydata" that has data for all 4 species that seabORD models.
+
+```{r}
+spdat_example <- 
+   #tibble::as_tibble( #as a tibble
+     dplyr::filter(seabORD::energeticsandpreydata,
+                   Code == "KI")
+    # )
+    
+#take a look
+print(t(spdat_example))
+```
+
+## BrdData
+
+there is a built in example dataset for this run. This is a raster file that must re-constructed from the data as follows (as for seamask)
+
+```{r}
+example_data_brd <- seabORD::BrdData_example
+#make the raster with the right dimensions..
+BrdData_example <- 
+  raster::raster(
+  nrows = example_data_brd$metadata[["n_rows"]],
+  ncols = example_data_brd$metadata[["n_cols"]],
+  xmn = example_data_brd$metadata[["x_min"]],
+  xmx = example_data_brd$metadata[["x_max"]],
+  ymn = example_data_brd$metadata[["y_min"]],
+  ymx = example_data_brd$metadata[["y_max"]],
+  crs = example_data_brd$metadata[["crs"]]
+)
+#fill it with the data
+BrdData_example <- raster::setValues(BrdData_example,
+                                     example_data_brd$matrix)
+#Set the name of the layer
+names(BrdData_example) <- "Forth.Islands"
+```
+
+Which has data that plot like this:
+
+```{r, echo=FALSE}
+BrdData_example_repr <- 
+    terra::rast(BrdData_example) %>%
+  terra::project(terra::crs(uk_map))
+BrdData_df <- as.data.frame(BrdData_example_repr, xy = TRUE)
+
+
+ggplot2::ggplot() +
+  # Plot the raster
+  ggplot2:: geom_raster(data = BrdData_df, ggplot2::aes(x = x, y = y, fill = ifelse(Forth.Islands == 0, NA, Forth.Islands))) +
+  # Add the reprojected UK boundary
+  ggplot2::geom_sf(data = uk_map, fill = NA, color = "#D63333", size = 1.5) +
+  # Customize the plot
+  theme_bslib +  #palette theme
+    ggplot2::scale_fill_viridis_c(
+    na.value = "gray",  # Set the color for NA (i.e., for 0 values)
+    name = "BrdData", direction = -1) +
+  ggplot2::labs(fill = "BrdData Raster Value",
+               title = "coasts (red) and BrdData",
+               caption = "Example 1: data BrdData")
+```
+
+## FrgCompData
+
+Also example data available
+
+```{r}
+example_data_frg <- seabORD::frgcompdata_example
+#make the raster with the right dimensions..
+FrgCompData_example <-
+  raster::raster(
+  nrows = example_data_frg$metadata[["n_rows"]],
+  ncols = example_data_frg$metadata[["n_cols"]],
+  xmn = example_data_frg$metadata[["x_min"]],
+  xmx = example_data_frg$metadata[["x_max"]],
+  ymn = example_data_frg$metadata[["y_min"]],
+  ymx = example_data_frg$metadata[["y_max"]],
+  crs = example_data_frg$metadata[["crs"]]
+)
+#fill it with the data
+FrgCompData_example <- raster::setValues(FrgCompData_example,
+                                         example_data_frg$matrix)
+#Set the name of the layer
+names(FrgCompData_example) <- "Forth.Islands"
+```
+
+which looks like:
+
+```{r, echo=FALSE}
+FrgCompData_example_repr <- 
+    terra::rast(FrgCompData_example) %>%
+  terra::project(terra::crs(uk_map))
+FrgCompData_df <- as.data.frame(FrgCompData_example_repr, xy = TRUE)
+
+ggplot2::ggplot() +
+  # Plot the raster
+  ggplot2:: geom_raster(data = FrgCompData_df, ggplot2::aes(x = x, y = y, fill = ifelse(Forth.Islands == 0, NA, Forth.Islands))) +
+  # Add the reprojected UK boundary
+  ggplot2::geom_sf(data = uk_map, fill = NA, color = "#D63333", size = 1.5) +
+  # Customize the plot
+  theme_bslib +  #palette theme
+    ggplot2::scale_fill_viridis_c(
+    na.value = "gray",  # Set the color for NA (i.e., for 0 values)
+    name = "FrgCompData", direction = -1) +
+  ggplot2::labs(fill = "FrgCompData Raster Value",
+               title = "coasts (red) and FrgCompData",
+               caption = "Example 1: data FrgCompData")
+```
+
+## fltdist_base
+
+data available for the example; we construct it as a raster
+
+```{r}
+UK9004171_bysea <- seabORD::UK9004171_bysea_3035
+#make the raster with the right dimensions..
+fltdist_base_example <-
+  raster::raster(
+  nrows = UK9004171_bysea$metadata[["n_rows"]],
+  ncols = UK9004171_bysea$metadata[["n_cols"]],
+  xmn = UK9004171_bysea$metadata[["x_min"]],
+  xmx = UK9004171_bysea$metadata[["x_max"]],
+  ymn = UK9004171_bysea$metadata[["y_min"]],
+  ymx = UK9004171_bysea$metadata[["y_max"]],
+  crs = UK9004171_bysea$metadata[["crs"]]
+)
+#fill it with the data
+fltdist_base_example <- raster::setValues(fltdist_base_example,
+                                          UK9004171_bysea$matrix)
+#as a raster brick. #WHY? only one layer
+fltdist_base_example <- raster::brick(fltdist_base_example)
+#Set the name of the layer
+names(fltdist_base_example) <- "UK9004171"
+
+```
+
+which looks like:
+
+```{r, echo = FALSE}
+fltdist_base_example_repr <- 
+    terra::rast(fltdist_base_example) %>%
+  terra::project(terra::crs(uk_map))
+fltdist_base_df <- as.data.frame(fltdist_base_example_repr, xy = TRUE)
+
+ggplot2::ggplot() +
+  # Plot the raster
+  ggplot2:: geom_raster(data = fltdist_base_df, ggplot2::aes(x = x, y = y, fill = ifelse(UK9004171 == 0, NA, UK9004171))) +
+  # Add the reprojected UK boundary
+  ggplot2::geom_sf(data = uk_map, fill = NA, color = "#D63333", size = 1.5) +
+  # Customize the plot
+  theme_bslib +  #palette theme
+    ggplot2::scale_fill_viridis_c(
+    na.value = "gray",  # Set the color for NA (i.e., for 0 values)
+    name = "fltdist_base Data", direction = -1) +
+  ggplot2::labs(fill = "fltdist_base Raster Value",
+               title = "coasts (red) and fltdist",
+               caption = "Example 1: data fltdist_base")
+```
+
+## FlightGridcorrection
+
+It's a TransitionLayer class object. One example provided that can be loaded
+
+```{r}
+FlightGridcorrection <- seabORD::FlightGridcorrection_3035
+```
+
+```{r, echo=FALSE}
+
+########### not sure how to represent this  need more info on flight grid correction ########
+
+
+# # to plot it you have to extract the values back into a raster):
+# 
+# # get the Transition Matrix
+# transition_matrix <- gdistance::transitionMatrix(FlightGridcorrection)
+# 
+# #non_zero_count <- Matrix::nnzero(transition_matrix)
+# 
+# # extract the diagonal values
+# #diag_vals <- Matrix::diag(transition_matrix)
+# 
+# #Sum each row to calculate total connectivity for each cell
+# total_connectivity <- Matrix::rowSums(transition_matrix)
+# 
+# #Create a Raster for the total_connectivity
+# total_connectivity_raster <- terra::rast(
+#   nrows = nrow(FlightGridcorrection),
+#   ncols = ncol(FlightGridcorrection),
+#   xmin = raster::extent(FlightGridcorrection)[1],
+#   xmax = raster::extent(FlightGridcorrection)[2],
+#   ymin = raster::extent(FlightGridcorrection)[3],
+#   ymax = raster::extent(FlightGridcorrection)[4],
+#   crs = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs",
+#   vals = total_connectivity #assign values
+# )
+# 
+# #change crs
+# total_connectivity_raster <- terra::project(total_connectivity_raster,
+#                                             terra::crs(uk_map))  
+# 
+# total_connectivity_df <- as.data.frame(total_connectivity_raster, xy = TRUE)
+# 
+# ggplot2::ggplot() +
+#   # Plot the raster
+#   ggplot2:: geom_raster(data = total_connectivity_df, ggplot2::aes(x = x, y = y, fill = ifelse(lyr.1 == 0, NA, lyr.1))) +
+#   # Add the reprojected UK boundary
+#   ggplot2::geom_sf(data = uk_map, fill = NA, color = "#D63333", size = 1.5) +
+#   # Customize the plot
+#   theme_bslib +  #palette theme
+#     ggplot2::scale_fill_viridis_c(
+#     na.value = "gray",  # Set the color for NA (i.e., for 0 values)
+#     name = "total_connectivity_df Data", direction = -1) +
+#   ggplot2::labs(fill = "total_connectivity_df Raster Value",
+#                title = "Raster and outline of the UK (red)",
+#                caption = "Example 1: data total_connectivity_df")
+```
+
+## ORDpoly
+
+```{r}
+ORDpoly_example <- seabORD::ORDpoly_example
+```
+
+which is a dataset with this multipolygon shapes:
+
+```{r, echo=FALSE}
+ORDpoly_example_repr <- ORDpoly_example %>%
+  sf::st_transform(sf::st_crs(uk_map))
+
+ggplot2::ggplot() +
+  # Plot the reprojected UK map in red
+  ggplot2::geom_sf(data =  uk_map, fill = NA, color = "#D63333", size = 1.5) +
+  # Add the ORDpoly_example shapes with a different color
+  ggplot2::geom_sf(data = ORDpoly_example_repr, fill = "#0483A4", color = "#0483A4", size = 1) +
+  ggplot2::coord_sf(xlim = c(-4, -1), ylim = c(55.5, 57)) +
+  theme_bslib +  #palette theme
+  ggplot2::labs(title = "coasts (red) and ORDpoly (blue)")
+```
+
+# Running seabORD
+
+Now that all the inputs are ready we can run the model using:
+
+```{r}
+
+# SeabORDoutput <- seabord(Par = Par_example,
+#                          ordPar = ordPar_example,
+#                          modPar = modPar_example,
+#                          switches = switches_example,
+#                          seamask = seamask_example,
+#                          spadat1 = spadat1_example,
+#                          spadat2 = spadat2_example,
+#                          spdat = spdat_example,
+#                          BrdData = BrdData_example,
+#                          FrgCompData = FrgCompData_example,
+#                          fltdist_base = fltdist_base_example,
+#                          FlightGridcorrection = FlightGridcorrection,
+#                          ORDpoly = ORDpoly_example)
+```
+
+the run can take some time..\
+the output will be saved in in your output directory set up in modPar.
+
+To learn more about the main functions behind seabORD you can read the article on the main functions
+
+To see how you can read in and plot the results you can read the article on how to interpret the results.

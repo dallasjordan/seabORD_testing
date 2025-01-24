@@ -24,13 +24,17 @@
 #' @param FlightGridcorrection Flight distance transition layer (gdistance)
 #' @param ORDpoly The ORD footprints
 #'
-#' @importFrom raster ncol nrow
+#' @importFrom raster ncol nrow raster calc cellStats crs extent ncell projectRaster values
 #' @importFrom stats sd
 #' @importFrom methods as
+#' @importFrom dplyr any_of bind_cols bind_rows contains group_by last_col left_join pull tally
+#' @importFrom tibble as_tibble
+#' @importFrom sp coordinates
+#' @importFrom readr write_csv
+#' @importFrom magrittr %>%
 #'
 #' @return A list containing tibbles
 #' @export
-
 seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                     spdat, BrdData, FrgCompData, fltdist_base,
                     FlightGridcorrection, ORDpoly) {
@@ -123,7 +127,7 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
 
   # > Make a reference grid for the Raster*
   base_grid <- raster::raster()
-  crs(base_grid) <- raster::crs(seamask)
+  crs(base_grid) <- crs(seamask)
   extent(base_grid) <- extent(seamask)
   raster::ncol(base_grid) <- raster::ncol(seamask)
   raster::nrow(base_grid) <- raster::nrow(seamask)

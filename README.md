@@ -6,7 +6,7 @@ SeabORD-R Version 2.0.0
 
 The purpose of the model is to predict the demographic effects on seabirds of displacement and barrier effects resulting from offshore renewable developments (ORDs), evaluated through adult survival and productivity translating from time/energy budgets of four different seabird species during the chick-rearing period. To determine the impacts of ORDs, baseline scenarios are compared with scenarios containing one or more ORDs. 
 
-![](vignettes/images/SeabORD_conceptual_inbox.png)
+![](man/figures/SeabORD_conceptual_inbox.png)
 
 ------------------------------------------------------------------------
 

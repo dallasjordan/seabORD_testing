@@ -81,50 +81,50 @@ The inputs for
 
 # Calibrate the model
 
-# Plot the outputs 
+# Plot the outputs
 
 If the time constraints do not allow for running of a full set of calibration runs within the workshop here is a dataset from calibration runs under the same setting conducted prior to the workshop:
 
 ```{r}
-# load in the datastet "example_calibration_output":
-seabORD::example_calibration_output
-
-#load("C:/Users/chrpol/Documents/seabord_pkg/seabORD_pkg/data/example_calibration_output.rda")
-
-example_calibration_output$output_a0$data <- example_calibration_output$output_a0$data %>%
-  mutate(percentage_loss = ((BM_adult_t0.mn - BM_adult.mn)/BM_adult_t0.mn))
-
-massupper <- 0.11
-masslower <- 0.09
-produpper <- 0.55
-prodlower <- 0.45
-
-lo <- 173
-hi <- 174
-
-  pAd <- ggplot() +
-    #geom_hline(yintercept = 0.1, lty=2) +
-    geom_hline(yintercept = massupper, lty=2, colour="darkgrey") +
-    geom_hline(yintercept = masslower, lty=2, colour="darkgrey") +
-    geom_vline(xintercept = hi, lty=1, colour="black") +
-    geom_vline(xintercept = lo, lty=1, colour="black") +
-    geom_point(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss) , colour="red") +
-    geom_line(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss), colour="red") +
-    geom_smooth(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss), colour="orange",method = "loess") +
-    labs(y = "Adults % loss")
-  
-  pCh <- ggplot() +
-    #geom_hline(yintercept = 0.5, lty= 2) + 
-    geom_hline(yintercept = produpper, lty= 2, colour="darkgrey") + 
-    geom_hline(yintercept = prodlower, lty= 2, colour="darkgrey") + 
-    geom_vline(xintercept = hi, lty=1, colour="black") +
-    geom_vline(xintercept = lo, lty=1, colour="black") +
-    geom_point(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="red") +
-    geom_line(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="red") +
-    geom_smooth(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="orange",method = "loess") +
-    labs(y = "Chicks Per Nest")
-  
-  pBoth <- grid.arrange(pAd, pCh, ncol=1)
+# # load in the datastet "example_calibration_output":
+# seabORD::example_calibration_output
+# 
+# #load("C:/Users/chrpol/Documents/seabord_pkg/seabORD_pkg/data/example_calibration_output.rda")
+# 
+# example_calibration_output$output_a0$data <- example_calibration_output$output_a0$data %>%
+#   mutate(percentage_loss = ((BM_adult_t0.mn - BM_adult.mn)/BM_adult_t0.mn))
+# 
+# massupper <- 0.11
+# masslower <- 0.09
+# produpper <- 0.55
+# prodlower <- 0.45
+# 
+# lo <- 173
+# hi <- 174
+# 
+#   pAd <- ggplot() +
+#     #geom_hline(yintercept = 0.1, lty=2) +
+#     geom_hline(yintercept = massupper, lty=2, colour="darkgrey") +
+#     geom_hline(yintercept = masslower, lty=2, colour="darkgrey") +
+#     geom_vline(xintercept = hi, lty=1, colour="black") +
+#     geom_vline(xintercept = lo, lty=1, colour="black") +
+#     geom_point(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss) , colour="red") +
+#     geom_line(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss), colour="red") +
+#     geom_smooth(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss), colour="orange",method = "loess") +
+#     labs(y = "Adults % loss")
+#   
+#   pCh <- ggplot() +
+#     #geom_hline(yintercept = 0.5, lty= 2) + 
+#     geom_hline(yintercept = produpper, lty= 2, colour="darkgrey") + 
+#     geom_hline(yintercept = prodlower, lty= 2, colour="darkgrey") + 
+#     geom_vline(xintercept = hi, lty=1, colour="black") +
+#     geom_vline(xintercept = lo, lty=1, colour="black") +
+#     geom_point(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="red") +
+#     geom_line(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="red") +
+#     geom_smooth(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="orange",method = "loess") +
+#     labs(y = "Chicks Per Nest")
+#   
+#   pBoth <- grid.arrange(pAd, pCh, ncol=1)
 
 
 

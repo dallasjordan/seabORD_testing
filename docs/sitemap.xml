@@ -16,10 +16,16 @@
     <loc>/articles/D_KI_calib_decay.html</loc>
   </url>
   <url>
+    <loc>/articles/E_exampleKI_calib.html</loc>
+  </url>
+  <url>
     <loc>/articles/E_KI_run_decay.html</loc>
   </url>
   <url>
     <loc>/articles/F_exampleKI_calib.html</loc>
+  </url>
+  <url>
+    <loc>/articles/F_KI_run_decay.html</loc>
   </url>
   <url>
     <loc>/articles/G_exampleKI_run.html</loc>
@@ -89,6 +95,9 @@
   </url>
   <url>
     <loc>/reference/example_calibration_output.html</loc>
+  </url>
+  <url>
+    <loc>/reference/example_lists_calibration.html</loc>
   </url>
   <url>
     <loc>/reference/FlightGridcorrection_3035.html</loc>

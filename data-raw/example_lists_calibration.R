@@ -70,7 +70,7 @@ ordPar_example <- list(
 #######################################################################
 ######################## build a list of lists #######################
 #######################################################################
-example_1_lists <-
+example_lists_calibration <-
   list(
     switches = switches_example,
     Par = Par_example,
@@ -78,4 +78,4 @@ example_1_lists <-
     ordPar = ordPar_example
   )
 
-usethis::use_data(example_1_lists, overwrite = TRUE)
+usethis::use_data(example_lists_calibration, overwrite = TRUE)

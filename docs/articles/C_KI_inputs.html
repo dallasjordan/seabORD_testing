@@ -54,8 +54,8 @@
     <a class="dropdown-item" href="../articles/B_explanation_model.html">Overview of seabORD</a>
     <a class="dropdown-item" href="../articles/C_KI_inputs.html">Example kittiwake:  step 1 - seabORD inputs</a>
     <a class="dropdown-item" href="../articles/D_KI_calib_decay.html">Example kittiwake:  step 2.1 - seabORD calibration - distance decay</a>
-    <a class="dropdown-item" href="../articles/E_KI_run_decay.html">Example kittiwake:  step 2.2 - seabORD run - distance decay</a>
-    <a class="dropdown-item" href="../articles/F_exampleKI_calib.html">Example kittiwake:  step 3.1 - seabORD calibration - GPS maps</a>
+    <a class="dropdown-item" href="../articles/E_exampleKI_calib.html">Example kittiwake:  step 2.2 - seabORD calibration - GPS maps</a>
+    <a class="dropdown-item" href="../articles/F_KI_run_decay.html">Example kittiwake:  step 3.1 - seabORD run - distance decay</a>
     <a class="dropdown-item" href="../articles/G_exampleKI_run.html">Example kittiwake:  step 3.2 - seabORD run - GPS maps</a>
     <a class="dropdown-item" href="../articles/H_exampleKI_output.html">Example kittiwake:  step 4 - interpreting the outputs</a>
     <a class="dropdown-item" href="../articles/I_main_functions.html">Main functions behind seabORD</a>
@@ -111,7 +111,8 @@
 <tr class="odd">
 <td>Par</td>
 <td>List</td>
-<td>The main parameters controlling/defining this run</td>
+<td>The main parameters controlling/defining this run e.g., species and
+colony</td>
 </tr>
 <tr class="even">
 <td>modPar</td>
@@ -126,8 +127,8 @@
 <tr class="even">
 <td>switches</td>
 <td>List</td>
-<td>A set of switches/flags used to control optional features of the
-run</td>
+<td>A set of switches/flags used to control optional features of the run
+and determine range of outptus</td>
 </tr>
 <tr class="odd">
 <td>seamask</td>
@@ -136,43 +137,46 @@ run</td>
 </tr>
 <tr class="even">
 <td>spadat1</td>
-<td></td>
-<td>description TBC</td>
+<td>Tibble</td>
+<td>Information relating to the colony/SPA</td>
 </tr>
 <tr class="odd">
 <td>spadat2</td>
-<td></td>
-<td>description TBC</td>
+<td>Tibble</td>
+<td>Information relating to the colony/SPA</td>
 </tr>
 <tr class="even">
 <td>spdat</td>
-<td></td>
+<td>Dataframe</td>
 <td>Species-specific parameters</td>
 </tr>
 <tr class="odd">
 <td>BrdData</td>
-<td></td>
-<td>description TBC</td>
+<td>Raster</td>
+<td>Bird distribution map - derived from GPS data or failing that, a
+distance-decay model</td>
 </tr>
 <tr class="even">
 <td>FrgCompData</td>
-<td></td>
-<td>description TBC</td>
+<td>Raster</td>
+<td>Competition distribution map - derived from GPS data or failing
+that, a distance-decay model</td>
 </tr>
 <tr class="odd">
 <td>fltdist_base</td>
-<td></td>
+<td>Raster</td>
 <td>Flight distance by sea, without ORDs. See user guide for
 details.</td>
 </tr>
 <tr class="even">
 <td>FlightGridcorrection</td>
-<td></td>
-<td>Flight distance transition layer (gdistance)</td>
+<td>Raster</td>
+<td>Flight distance transition layer (gdistance) corrected for
+distortions relating to the CRS</td>
 </tr>
 <tr class="odd">
 <td>ORDpoly</td>
-<td></td>
+<td>Multipolygon (simple features)</td>
 <td>The ORD footprints</td>
 </tr>
 </tbody>
@@ -185,18 +189,39 @@ input argument.</p>
 </h3>
 <p>List for biological parameters:</p>
 <ul>
-<li><p>thisSpecies:</p></li>
-<li><p>colonies:</p></li>
-<li><p>Nscalefactor:</p></li>
-<li><p>Prob_Displacement</p></li>
-<li><p>Prob_Barrier</p></li>
-<li><p>PreyType</p></li>
-<li><p>collision</p></li>
-<li><p>SiteSelectionMethod</p></li>
-<li><p>MaxDistancekm</p></li>
-<li><p>PropInRange</p></li>
-<li><p>Npairspercol</p></li>
-<li><p>Pmedian</p></li>
+<li><p><strong>thisSpecies</strong>: The species being used. You can
+select from “KI” (kittiwake), “GU” (guillemot), “RA” (razorbill), or
+“PU” (puffin)</p></li>
+<li><p><strong>colonies</strong>: The code number for the colony/SPA
+being modelled</p></li>
+<li><p><strong>Nscalefactor</strong>: What proportion of the total
+population do you want to run the model for i.e., Nscalefactor = 1 is
+for 100% of the population, where 0.1 would represent 10% of the
+population which may be useful for test runs.</p></li>
+<li><p><strong>Prob_Displacement</strong>: The proportion of individual
+birds which will experience displacement effects <em>if</em> interacting
+with an ORD during a certain trip. E.g., if Prob_Displacement = 0.6, 60%
+of individuals will be displacement susceptible.</p></li>
+<li><p><strong>Prob_Barrier</strong>: The proportion of individuals
+which experience displacement effects, which will also experience
+barrier effects. E.g., if Prob_Barrier = 1, 100% of individuals which
+are displacement susceptible will also be barrier effect susceptible
+(i.e., 60% of total population)</p></li>
+<li><p><strong>PreyType</strong>: This dictates the type of prey layer
+used in the simulation, which is typically set to “uniform”, meaning all
+prey cells begin with the same prey value.</p></li>
+<li><p><strong>collision</strong>: Not currently used</p></li>
+<li><p><strong>SiteSelectionMethod</strong>: Set to “Map” currently, but
+options to add in a distance decay module.</p></li>
+<li><p><strong>MaxDistancekm</strong>: Not currently used in this
+version</p></li>
+<li><p><strong>PropInRange</strong>: Not currently used in this
+version</p></li>
+<li><p><strong>Npairspercol</strong>: The number of pairs of adult birds
+at the given colony/SPA</p></li>
+<li><p><strong>Pmedian</strong>: The value of prey in cells in this
+particular replicate. Prior to running the simulation with ORDs this
+must be determined in a calibration step.</p></li>
 </ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Par_example</span> <span class="op">&lt;-</span>  <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_1_lists.html">example_1_lists</a></span><span class="op">$</span><span class="va">Par</span></span>
@@ -221,11 +246,22 @@ input argument.</p>
 </h3>
 <p>List for model parameters.</p>
 <ul>
-<li><p>Nparallel</p></li>
-<li><p>initialseed</p></li>
-<li><p>reference</p></li>
-<li><p>outputdir</p></li>
-<li><p>Nreplicates</p></li>
+<li><p><strong>Nparallel</strong>: This is used for parallel runs only
+(i.e., set to “NA” for runs on local machine) to indicate which
+replicate is being run which will dictate the seed being so that
+reproducibility is conducted in the same fashion as for local
+runs.</p></li>
+<li><p><strong>initialseed</strong>: A seed for
+reproducibility.</p></li>
+<li><p><strong>reference</strong>: A name to be attached to folders and
+files emanating from this particular simulation which will be generated
+from other outputs in the order of: model environment; model mode
+(calibration/scenario); species, colony ID. E.g.,
+“serial_scenario_KI_UK9004171”</p></li>
+<li><p><strong>outputdir</strong>: The file directory where outputs from
+your model will be saved to.</p></li>
+<li><p><strong>Nreplicates</strong>: The number of replicates being
+used</p></li>
 </ul>
 <p>make a folder in the directory to store your output (you can place it
 wherever)</p>
@@ -251,10 +287,15 @@ wherever)</p>
 </h3>
 <p>List for wind farm parameters</p>
 <ul>
-<li><p>include_ORDs</p></li>
-<li><p>parnames</p></li>
-<li><p>FootprintBorder</p></li>
-<li><p>BufferZone</p></li>
+<li><p><strong>include_ORDs</strong>: Code names of ORDs to be included
+in this run, e.g., “NEART” is Neart na Gaoithe</p></li>
+<li><p><strong>parnames</strong>: Further naming of wind farms to be
+included</p></li>
+<li><p><strong>FootprintBorder</strong>: The extension distance (km) of
+the buffer around the ORD which birds avoid</p></li>
+<li><p><strong>BufferZone</strong>: Also known as the displacement zone,
+this is the distance (km) extending beyond the FootprintBorder where
+displacement susceptible birds will be displaced to.</p></li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ordPar_example</span> <span class="op">&lt;-</span>  <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_1_lists.html">example_1_lists</a></span><span class="op">$</span><span class="va">ordPar</span></span>
@@ -274,17 +315,30 @@ features of the run. It accepts the following options:</p>
 <ul>
 <li><p><strong>environment</strong> : “serial” or “parallel”</p></li>
 <li><p><strong>modelmode</strong>: “scenario” or “calibration”</p></li>
-<li><p><strong>debugmode</strong>: 0, 1, or 2</p></li>
+<li><p><strong>debugmode</strong>: 0, 1, or 2 - typically used during
+development so can be ignored</p></li>
 <li><p><strong>bycol</strong>: TRUE or FALSE</p></li>
 <li><p><strong>bysus</strong>: TRUE or FALSE</p></li>
 <li><p><strong>bych</strong>: TRUE or FALSE</p></li>
-<li><p><strong>printdaily</strong>: TRUE or FALSE</p></li>
-<li><p><strong>printseason</strong>: TRUE or FALSE</p></li>
-<li><p><strong>printpair</strong>: TRUE or FALSE</p></li>
-<li><p><strong>minout</strong>: TRUE or FALSE</p></li>
-<li><p><strong>silent</strong>: TRUE or FALSE</p></li>
-<li><p><strong>saverds</strong>: TRUE or FALSE</p></li>
-<li><p><strong>savebirdflightmap</strong>: TRUE or FALSE</p></li>
+<li><p><strong>printdaily</strong>: TRUE or FALSE - an option to print
+out daily outputs from each timestep for all modelled
+indiviudals</p></li>
+<li><p><strong>printseason</strong>: TRUE or FALSE - more detailed
+outputs from each season (baseline/scenario), as opposed to teh higher
+level summary issued as standard.</p></li>
+<li><p><strong>printpair</strong>: TRUE or FALSE - more detailed outputs
+from each pair.</p></li>
+<li><p><strong>minout</strong>: TRUE or FALSE - <em>to be
+completed</em></p></li>
+<li><p><strong>silent</strong>: TRUE or FALSE - <em>to be
+completed</em></p></li>
+<li><p><strong>saverds</strong>: TRUE or FALSE - This should nearly
+always be set to TRUE, as this is the standard output summary.</p></li>
+<li><p><strong>savebirdflightmap</strong>: TRUE or FALSE - an option to
+view a map of foraging locations from this simulation, which can be used
+as a visual check that the simulations are executing as intended i.e.,
+have you run a simulation with the correct colony and wind farm set
+up.</p></li>
 </ul>
 <p>There is an example list available in the package that can be
 accessed by simply call in the built-in list “example_switch_list”:</p>
@@ -316,8 +370,9 @@ debugging and by saving the output as a .rds file.</p>
 <div class="section level3">
 <h3 id="seamask">seamask<a class="anchor" aria-label="anchor" href="#seamask"></a>
 </h3>
-<p>Example data to be used as seamask can be found built in the package
-as “seamask_3035_example” to make the raster for the seamask:</p>
+<p>Used to indicate where the sea is. Example data to be used as seamask
+can be found built in the package as “seamask_3035_example” to make the
+raster for the seamask:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">example_data_seamask</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/seamask_3035_example.html">seamask_3035_example</a></span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">example_data_seamask</span><span class="op">)</span></span>
@@ -482,9 +537,11 @@ from the built in dataset “energeticsandpreydata” that has data for all
 <div class="section level3">
 <h3 id="brddata">BrdData<a class="anchor" aria-label="anchor" href="#brddata"></a>
 </h3>
-<p>there is a built in example dataset for this run. This is a raster
-file that must re-constructed from the data as follows (as for
-seamask)</p>
+<p>Bird distribution map. There is a built in example dataset for this
+run which is derived from GPS data and modelled with a GAM incorporating
+important factors known to drive space use in this species. This is a
+raster file that must re-constructed from the data as follows (as for
+seamask).</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">example_data_brd</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/BrdData_example.html">BrdData_example</a></span></span>
 <span><span class="co">#make the raster with the right dimensions..</span></span>
@@ -529,7 +586,11 @@ seamask)</p>
 <div class="section level3">
 <h3 id="frgcompdata">FrgCompData<a class="anchor" aria-label="anchor" href="#frgcompdata"></a>
 </h3>
-<p>Also example data available</p>
+<p>Competition distribution map i.e., the distribution of conspecifics
+from surrounding colonies which may interact with the colony/SPA being
+simulated. This is used throughout the model to estimate how competition
+from other colonies influences intake rate at different foraging
+sites.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">example_data_frg</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/frgcompdata_example.html">frgcompdata_example</a></span></span>
 <span><span class="co">#make the raster with the right dimensions..</span></span>
@@ -554,7 +615,7 @@ seamask)</p>
 <div class="section level3">
 <h3 id="fltdist_base">fltdist_base<a class="anchor" aria-label="anchor" href="#fltdist_base"></a>
 </h3>
-<p>data available for the example; we construct it as a raster</p>
+<p>Flight distance by sea, without ORDs. See user guide for details.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">UK9004171_bysea</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/UK9004171_bysea_3035.html">UK9004171_bysea_3035</a></span></span>
 <span><span class="co">#make the raster with the right dimensions..</span></span>
@@ -589,6 +650,8 @@ loaded</p>
 <div class="section level3">
 <h3 id="ordpoly">ORDpoly<a class="anchor" aria-label="anchor" href="#ordpoly"></a>
 </h3>
+<p>This is a set of polygons used to represent the ORDs that we are
+intending to predict the impact of.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ORDpoly_example</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/ORDpoly_example.html">ORDpoly_example</a></span></span></code></pre></div>
 <p>which is a dataset with this multipolygon shapes:</p>

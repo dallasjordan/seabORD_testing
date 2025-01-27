@@ -1,0 +1,19 @@
+---
+title: "Example kittiwake:  step 3.1 - seabORD run - distance decay"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example kittiwake:  step 3.1 - seabORD run - distance decay}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, warning = FALSE, message = FALSE  }
+library(seabORD)
+```

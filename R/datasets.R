@@ -267,4 +267,25 @@
 #' @source NEED EXPL
 "ORDpoly_example"
 
+#' example_calibration_output
+#'
+#' This dataset is stored in an `.rds` file NEED EXPL
+#'
+#' @format An object of class \code{data.frame} (or any class the `.rds` file contains).
+#' \describe{
+#'   \item{switches}{list NEED EXPL}
+#'   \item{Parameters}{list NEED EXPL}
+#'   \item{ordPar}{list NEED EXPL}
+#'   \item{modPar}{list NEED EXPL}
+#'   \item{thisRun}{list NEED EXPL}
+#'   \item{output_f0}{list of tibbles}
+#'   \item{output_c0}{list of tibbles}
+#'   \item{output_a0}{list of tibbles}
+#'   \item{output_y0}{list of tibbles}
+#'   \item{birdflightamp}{raster}
+#' }
+#' @source \href{https://example.com}{Example Source}
+"example_calibration_output"
+
+
 

@@ -77,7 +77,7 @@ For further information on inputs, please see Article "Example kittiwake: step 1
 
 This script will import the example parameters sets and spatial data, which are largely similar to the calibration inputs. Note will be given where these differ considerably, i.e., with regard to the inclusion of different wind farm footprints.
 
-### Parameter sets 
+### Parameter sets
 
 ```{r}
 Par_example <- seabORD::example_1_lists$Par

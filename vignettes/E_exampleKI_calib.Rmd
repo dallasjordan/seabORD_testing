@@ -336,5 +336,5 @@ hi <- 174
     #geom_smooth(dat = sbordout$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="orange",method = "loess") +
     labs(y = "Chicks Per Nest")
 
-  pBoth <- gridExtra(pAd, pCh, ncol=1)
+  pBoth <- gridExtra::grid.arrange(pAd, pCh, ncol=1)
 ```

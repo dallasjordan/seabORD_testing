@@ -92,8 +92,10 @@
 <p>Load the seabORD package</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="co"># load seabORD</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">seabORD</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># load seabORD and other required packages for plotting outputs </span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">seabORD</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">gridExtra</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction-background">Introduction &amp; background<a class="anchor" aria-label="anchor" href="#introduction-background"></a>
 </h2>
@@ -121,71 +123,329 @@ block indicates the prey values where there is overlap between the
 estimates, which is the prey range used in subsequent simulations with
 ORDs included.</em></div>
 </div>
-<div class="section level3">
-<h3 id="this-example">This example<a class="anchor" aria-label="anchor" href="#this-example"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="this-example">This example<a class="anchor" aria-label="anchor" href="#this-example"></a>
+</h2>
 <p>In this example we will run 20 baseline runs (no wind farm footprints
 included) with a range of prey values and plot the outputs in attempt to
 capture “moderate” conditions for kittiwakes at the Isle of May.</p>
+<div class="section level3">
+<h3 id="prepare-inputs">Prepare inputs<a class="anchor" aria-label="anchor" href="#prepare-inputs"></a>
+</h3>
+<p>The inputs for a calibration are largely the same as when running a
+full run except there are no ORDs included. We will first load in our
+parameter sets (Par, modPar, ordPar, switches), followed by the various
+spatial inputs used to set up the landscape and environment
+attributes.</p>
+<div class="section level4">
+<h4 id="parameters-sets">Parameters sets<a class="anchor" aria-label="anchor" href="#parameters-sets"></a>
+</h4>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">Par_example</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_lists_calibration.html">example_lists_calibration</a></span><span class="op">$</span><span class="va">Par</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">Par_example</span><span class="op">)</span> <span class="co"># view your list of main parameters - NOTE that $NScalefactor is set to 0.1 meaning we are running with 10% of the populaution, which may be sufficient for calibration runs.</span></span>
+<span><span class="co">#&gt; List of 12</span></span>
+<span><span class="co">#&gt;  $ thisSpecies        : chr "KI"</span></span>
+<span><span class="co">#&gt;  $ colonies           : chr "UK9004171"</span></span>
+<span><span class="co">#&gt;  $ Nscalefactor       : num 0.1</span></span>
+<span><span class="co">#&gt;  $ Prob_Displacement  : num 0.6</span></span>
+<span><span class="co">#&gt;  $ Prob_Barrier       : num 1</span></span>
+<span><span class="co">#&gt;  $ PreyType           : chr "Uniform"</span></span>
+<span><span class="co">#&gt;  $ collision          : chr "Off"</span></span>
+<span><span class="co">#&gt;  $ SiteSelectionMethod: chr "Map"</span></span>
+<span><span class="co">#&gt;  $ MaxDistancekm      : num 0</span></span>
+<span><span class="co">#&gt;  $ PropInRange        : num 0</span></span>
+<span><span class="co">#&gt;  $ Npairspercol       : num 2898</span></span>
+<span><span class="co">#&gt;  $ Pmedian            : num [1:20] 170 171 171 172 172 ...</span></span>
+<span></span>
+<span><span class="co"># Create the ouput folder "output_seabORD_calibration" specifically for calibration outputs if it doesn't alreay exist</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="st">"output_seabORD_calibration"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="st">"output_seabORD_calibration"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">modPar_example</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_lists_calibration.html">example_lists_calibration</a></span><span class="op">$</span><span class="va">modPar</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">modPar_example</span><span class="op">)</span> <span class="co"># NOTE: here is where our 20 replicates are specified - this must align with the number of prey values listed in Par$Pmedian</span></span>
+<span><span class="co">#&gt; List of 5</span></span>
+<span><span class="co">#&gt;  $ Nparallel  : logi NA</span></span>
+<span><span class="co">#&gt;  $ initialseed: num 6598</span></span>
+<span><span class="co">#&gt;  $ reference  : chr "serial_calibration_KI_UK9004171"</span></span>
+<span><span class="co">#&gt;  $ outputdir  : chr "output_seabORD"</span></span>
+<span><span class="co">#&gt;  $ Nreplicates: num 20</span></span>
+<span></span>
+<span><span class="co"># Lets run a test to that effect:</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">modPar_example</span><span class="op">$</span><span class="va">Nreplicates</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">Par_example</span><span class="op">$</span><span class="va">Pmedian</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Nreplicates and number of prey inputs match - you may proceed"</span><span class="op">)</span></span>
+<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Nreplicates and number of prey inputs DO NOT match - you may proceed, but will likely fail..."</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; [1] "Nreplicates and number of prey inputs match - you may proceed"</span></span>
+<span></span>
+<span><span class="va">modPar_example</span><span class="op">$</span><span class="va">outputdir</span>  <span class="co">#this does not align with the directory created above </span></span>
+<span><span class="co">#&gt; [1] "output_seabORD"</span></span>
+<span><span class="co"># so let's change it:</span></span>
+<span><span class="va">modPar_example</span><span class="op">$</span><span class="va">outputdir</span> <span class="op">&lt;-</span> <span class="st">"output_seabORD_calibration"</span></span>
+<span></span>
+<span><span class="va">ordPar_example</span> <span class="op">&lt;-</span>  <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_lists_calibration.html">example_lists_calibration</a></span><span class="op">$</span><span class="va">ordPar</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">ordPar_example</span><span class="op">)</span> <span class="co"># Note that there is nothing within this list - and there doesn't need to be as we are only running baseline runs with no ORDs included. </span></span>
+<span><span class="co">#&gt;  list()</span></span>
+<span></span>
+<span><span class="va">switches_example</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_lists_calibration.html">example_lists_calibration</a></span><span class="op">$</span><span class="va">switches</span></span>
+<span><span class="va">switches_example</span><span class="op">$</span><span class="va">savebirdflightmap</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span> <span class="co"># turn this switch on if you want to see an example of the birdflightmap output</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="assorted-spatial-inputs">Assorted spatial inputs<a class="anchor" aria-label="anchor" href="#assorted-spatial-inputs"></a>
+</h4>
+<p>Now load in all the spatial inputs. For more information please see
+the “Example kittiwake: step 1 - seabORD inputs” article.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">example_data_seamask</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/seamask_3035_example.html">seamask_3035_example</a></span></span>
+<span></span>
+<span><span class="co">#make a raster with the right dimension/proj/extents etc.</span></span>
+<span><span class="va">seamask_example</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>    nrows <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ncols <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmn <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmx <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymn <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymx <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    crs <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#fill it with the data available</span></span>
+<span><span class="va">seamask_example</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">seamask_example</span>, <span class="co">#the raster</span></span>
+<span>                                     <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span> <span class="co">#the values</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">seamask_example</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"seamask_3035"</span></span>
+<span></span>
+<span></span>
+<span><span class="va">spadat1_example</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span> <span class="co">#as a tibble</span></span>
+<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/spacoordinates.html">spacoordinates</a></span>, <span class="co">#the full dataset</span></span>
+<span>                    <span class="va">SITECODE</span> <span class="op">==</span> <span class="st">"UK9004171"</span><span class="op">)</span> <span class="co">#the iste of interest</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">spadat2_example</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span> <span class="co">#as a tibble</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/spalist.html">spalist</a></span>, <span class="co">#the whole list</span></span>
+<span>                  <span class="va">SITE_CODE</span> <span class="op">==</span> <span class="st">"UK9004171"</span><span class="op">)</span> <span class="co">#the site of interest</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="va">spdat_example</span> <span class="op">&lt;-</span> </span>
+<span>   <span class="co">#tibble::as_tibble( #as a tibble</span></span>
+<span>     <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/energeticsandpreydata.html">energeticsandpreydata</a></span>,</span>
+<span>                   <span class="va">Code</span> <span class="op">==</span> <span class="st">"KI"</span><span class="op">)</span></span>
+<span>    <span class="co"># )</span></span>
+<span></span>
+<span></span>
+<span><span class="va">example_data_brd</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/BrdData_example.html">BrdData_example</a></span></span>
+<span><span class="co">#make the raster with the right dimensions..</span></span>
+<span><span class="va">BrdData_example</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>  nrows <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ncols <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  xmn <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  xmx <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ymn <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ymx <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  crs <span class="op">=</span> <span class="va">example_data_brd</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#fill it with the data</span></span>
+<span><span class="va">BrdData_example</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">BrdData_example</span>,</span>
+<span>                                     <span class="va">example_data_brd</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">BrdData_example</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"Forth.Islands"</span></span>
+<span></span>
+<span></span>
+<span><span class="va">example_data_frg</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/frgcompdata_example.html">frgcompdata_example</a></span></span>
+<span><span class="co">#make the raster with the right dimensions..</span></span>
+<span><span class="va">FrgCompData_example</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>  nrows <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ncols <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  xmn <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  xmx <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ymn <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ymx <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  crs <span class="op">=</span> <span class="va">example_data_frg</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#fill it with the data</span></span>
+<span><span class="va">FrgCompData_example</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">FrgCompData_example</span>,</span>
+<span>                                         <span class="va">example_data_frg</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">FrgCompData_example</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"Forth.Islands"</span></span>
+<span></span>
+<span></span>
+<span><span class="va">UK9004171_bysea</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/UK9004171_bysea_3035.html">UK9004171_bysea_3035</a></span></span>
+<span><span class="co">#make the raster with the right dimensions..</span></span>
+<span><span class="va">fltdist_base_example</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>  nrows <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ncols <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  xmn <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  xmx <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ymn <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  ymx <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>  crs <span class="op">=</span> <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#fill it with the data</span></span>
+<span><span class="va">fltdist_base_example</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">fltdist_base_example</span>,</span>
+<span>                                          <span class="va">UK9004171_bysea</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span></span>
+<span><span class="co">#as a raster brick. #WHY? only one layer</span></span>
+<span><span class="va">fltdist_base_example</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/brick.html" class="external-link">brick</a></span><span class="op">(</span><span class="va">fltdist_base_example</span><span class="op">)</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">fltdist_base_example</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"UK9004171"</span></span>
+<span></span>
+<span></span>
+<span><span class="va">FlightGridcorrection</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/FlightGridcorrection_3035.html">FlightGridcorrection_3035</a></span></span>
+<span></span>
+<span></span>
+<span><span class="co">#ORDpoly_example &lt;- seabORD::ORDpoly_example # commented out as not required for calibration runs</span></span></code></pre></div>
 </div>
 </div>
-<div class="section level2">
-<h2 id="prepare-for-the-run">Prepare for the run<a class="anchor" aria-label="anchor" href="#prepare-for-the-run"></a>
-</h2>
-<p>The inputs for</p>
-<p><em>[include table here when updated in the scenario
-example]</em></p>
+<div class="section level3">
+<h3 id="set-off-calibration-runs">Set off calibration runs<a class="anchor" aria-label="anchor" href="#set-off-calibration-runs"></a>
+</h3>
+<p>Now that the inputs have been prepared by loading them into our
+environment we can set off the run using the following code:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># SeabORDoutput &lt;- seabord(Par = Par_example,</span></span>
+<span><span class="co">#                          ordPar = ordPar_example,</span></span>
+<span><span class="co">#                          modPar = modPar_example,</span></span>
+<span><span class="co">#                          switches = switches_example,</span></span>
+<span><span class="co">#                          seamask = seamask_example,</span></span>
+<span><span class="co">#                          spadat1 = spadat1_example,</span></span>
+<span><span class="co">#                          spadat2 = spadat2_example,</span></span>
+<span><span class="co">#                          spdat = spdat_example,</span></span>
+<span><span class="co">#                          BrdData = BrdData_example,</span></span>
+<span><span class="co">#                          FrgCompData = FrgCompData_example,</span></span>
+<span><span class="co">#                          fltdist_base = fltdist_base_example,</span></span>
+<span><span class="co">#                          FlightGridcorrection = FlightGridcorrection,</span></span>
+<span><span class="co">#                          ORDpoly = ORDpoly_example)</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># Save SeabORDsummary:</span></span>
+<span><span class="co"># if (switches$saverds) {</span></span>
+<span><span class="co">#     saveRDS(SeabORDoutput, file.path(modPar_example$outputdir, paste0("sb_out_", gsub("\\.", "_", make.names(paste0(modPar$reference,"_", Sys.Date()))),".rds")))</span></span>
+<span><span class="co"># }</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="calibrate-the-model">Calibrate the model<a class="anchor" aria-label="anchor" href="#calibrate-the-model"></a>
-</h2>
-</div>
-<div class="section level2">
-<h2 id="plot-the-outputs">Plot the outputs<a class="anchor" aria-label="anchor" href="#plot-the-outputs"></a>
-</h2>
+<div class="section level3">
+<h3 id="plot-the-outputs-and-determine-prey-values">Plot the outputs and determine prey values<a class="anchor" aria-label="anchor" href="#plot-the-outputs-and-determine-prey-values"></a>
+</h3>
 <p>If the time constraints do not allow for running of a full set of
 calibration runs within the workshop here is a dataset from calibration
-runs under the same setting conducted prior to the workshop:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># # load in the datastet "example_calibration_output":</span></span>
-<span><span class="co"># seabORD::example_calibration_output</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># #load("C:/Users/chrpol/Documents/seabord_pkg/seabORD_pkg/data/example_calibration_output.rda")</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># example_calibration_output$output_a0$data &lt;- example_calibration_output$output_a0$data %&gt;%</span></span>
-<span><span class="co">#   mutate(percentage_loss = ((BM_adult_t0.mn - BM_adult.mn)/BM_adult_t0.mn))</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># massupper &lt;- 0.11</span></span>
-<span><span class="co"># masslower &lt;- 0.09</span></span>
-<span><span class="co"># produpper &lt;- 0.55</span></span>
-<span><span class="co"># prodlower &lt;- 0.45</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># lo &lt;- 173</span></span>
-<span><span class="co"># hi &lt;- 174</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co">#   pAd &lt;- ggplot() +</span></span>
-<span><span class="co">#     #geom_hline(yintercept = 0.1, lty=2) +</span></span>
-<span><span class="co">#     geom_hline(yintercept = massupper, lty=2, colour="darkgrey") +</span></span>
-<span><span class="co">#     geom_hline(yintercept = masslower, lty=2, colour="darkgrey") +</span></span>
-<span><span class="co">#     geom_vline(xintercept = hi, lty=1, colour="black") +</span></span>
-<span><span class="co">#     geom_vline(xintercept = lo, lty=1, colour="black") +</span></span>
-<span><span class="co">#     geom_point(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss) , colour="red") +</span></span>
-<span><span class="co">#     geom_line(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss), colour="red") +</span></span>
-<span><span class="co">#     geom_smooth(dat = example_calibration_output$output_a0$data,aes(x=Prey, y = percentage_loss), colour="orange",method = "loess") +</span></span>
-<span><span class="co">#     labs(y = "Adults % loss")</span></span>
-<span><span class="co">#   </span></span>
-<span><span class="co">#   pCh &lt;- ggplot() +</span></span>
-<span><span class="co">#     #geom_hline(yintercept = 0.5, lty= 2) + </span></span>
-<span><span class="co">#     geom_hline(yintercept = produpper, lty= 2, colour="darkgrey") + </span></span>
-<span><span class="co">#     geom_hline(yintercept = prodlower, lty= 2, colour="darkgrey") + </span></span>
-<span><span class="co">#     geom_vline(xintercept = hi, lty=1, colour="black") +</span></span>
-<span><span class="co">#     geom_vline(xintercept = lo, lty=1, colour="black") +</span></span>
-<span><span class="co">#     geom_point(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="red") +</span></span>
-<span><span class="co">#     geom_line(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="red") +</span></span>
-<span><span class="co">#     geom_smooth(dat = example_calibration_output$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="orange",method = "loess") +</span></span>
-<span><span class="co">#     labs(y = "Chicks Per Nest")</span></span>
-<span><span class="co">#   </span></span>
-<span><span class="co">#   pBoth &lt;- grid.arrange(pAd, pCh, ncol=1)</span></span></code></pre></div>
+runs under the same setting conducted prior to the workshop:.</p>
+<p>For this particular example we define moderate conditions for
+kittiwakes on the Isle of May against the two following outputs:</p>
+<table class="table">
+<colgroup>
+<col width="23%">
+<col width="21%">
+<col width="27%">
+<col width="27%">
+</colgroup>
+<thead><tr class="header">
+<th>Output</th>
+<th>Moderate value</th>
+<th>Upper bound (+10%)</th>
+<th>Lower bound (-10%)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Adult mass loss</td>
+<td>10%</td>
+<td>11%</td>
+<td>9%</td>
+</tr>
+<tr class="even">
+<td>Chicks per nest</td>
+<td>50%</td>
+<td>55%</td>
+<td>45%</td>
+</tr>
+</tbody>
+</table>
+<p>Where adult mass loss is the average percentage mass loss of adults
+over the duration of the chick-rearing season being simulated, and
+chicks per nest is the average number of chicks surviving per nest. The
+aim of calibration is to find the shared prey values contained within
+the upper and lower bounds between each output.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># load in the saved datastet "example_calibration_output" contained within the seabORD package:</span></span>
+<span><span class="va">sbordout</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/example_calibration_output.html">example_calibration_output</a></span></span>
+<span><span class="co"># str(sbordout) # view the extensive structure of the output </span></span>
+<span></span>
+<span><span class="co"># View the birdfligthmap output which is saved to it:</span></span>
+<span><span class="va">BirdFlightMap</span> <span class="op">&lt;-</span> </span>
+<span>    <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">sbordout</span><span class="op">$</span><span class="va">BirdFlightMap</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">project</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crs.html" class="external-link">crs</a></span><span class="op">(</span><span class="va">uk_map</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">BirdFlightMap_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">BirdFlightMap</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">BirdFlightMap_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, fill <span class="op">=</span> <span class="va">layer</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add the reprojected UK boundary</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">uk_map</span>, fill <span class="op">=</span> <span class="cn">NA</span>, color <span class="op">=</span> <span class="st">"#D63333"</span>, size <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Customize the plot</span></span>
+<span>  <span class="va">theme_bslib</span> <span class="op">+</span>  <span class="co">#palette theme</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span></span>
+<span>    na.value <span class="op">=</span> <span class="st">"gray"</span>,  <span class="co"># Set the color for NA (i.e., for 0 values)</span></span>
+<span>    name <span class="op">=</span> <span class="st">"BirdFlightMap"</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"BirdFlightMap locations"</span>,</span>
+<span>               title <span class="op">=</span> <span class="st">"coasts (red) and BirdFlightMap"</span><span class="op">)</span><span class="op">+</span></span>
+<span>  <span class="co"># Crop the map to the Firth of Forth and a bit of the North Sea</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">coord_sf</a></span><span class="op">(</span></span>
+<span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.5</span>, <span class="fl">0</span><span class="op">)</span>,  <span class="co"># Longitude range (adjust as needed)</span></span>
+<span>    ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55.25</span>, <span class="fl">57.25</span><span class="op">)</span>     <span class="co"># Latitude range (adjust as needed)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="E_exampleKI_calib_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p>You can see from this map that there is no evidence of and ORD
+interactions, which is reassuring!</p>
+<p>Now we will plot the adult outputs (sbordout$output_a0) and the chick
+outputs (sbordout$output_c0) against the range of prey values across
+replicates to obtain our calibrated estimates to be used in the scenario
+runs going forward.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># create a new column for percentage adult mass loss in "output_a0$data" which is the data output for adults in the simulation</span></span>
+<span><span class="va">sbordout</span><span class="op">$</span><span class="va">output_a0</span><span class="op">$</span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">sbordout</span><span class="op">$</span><span class="va">output_a0</span><span class="op">$</span><span class="va">data</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>percentage_loss <span class="op">=</span> <span class="op">(</span><span class="op">(</span><span class="va">BM_adult_t0.mn</span> <span class="op">-</span> <span class="va">BM_adult.mn</span><span class="op">)</span><span class="op">/</span><span class="va">BM_adult_t0.mn</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># create our bounds for moderate conditions to be plotted.</span></span>
+<span><span class="va">massupper</span> <span class="op">&lt;-</span> <span class="fl">0.11</span></span>
+<span><span class="va">masslower</span> <span class="op">&lt;-</span> <span class="fl">0.09</span></span>
+<span><span class="va">produpper</span> <span class="op">&lt;-</span> <span class="fl">0.55</span></span>
+<span><span class="va">prodlower</span> <span class="op">&lt;-</span> <span class="fl">0.45</span></span>
+<span></span>
+<span><span class="co"># vertical ablines (please feel free to edit) which you can use as a visual guide to ascertain where the moderate conditions overlap between outputs</span></span>
+<span><span class="va">lo</span> <span class="op">&lt;-</span> <span class="fl">173</span></span>
+<span><span class="va">hi</span> <span class="op">&lt;-</span> <span class="fl">174</span></span>
+<span></span>
+<span>  <span class="va">pAd</span> <span class="op">&lt;-</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="co">#geom_hline(yintercept = 0.1, lty=2) +</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">massupper</span>, lty<span class="op">=</span><span class="fl">2</span>, colour<span class="op">=</span><span class="st">"darkgrey"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">masslower</span>, lty<span class="op">=</span><span class="fl">2</span>, colour<span class="op">=</span><span class="st">"darkgrey"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">hi</span>, lty<span class="op">=</span><span class="fl">1</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">lo</span>, lty<span class="op">=</span><span class="fl">1</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>dat <span class="op">=</span> <span class="va">sbordout</span><span class="op">$</span><span class="va">output_a0</span><span class="op">$</span><span class="va">data</span>,<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Prey</span>, y <span class="op">=</span> <span class="va">percentage_loss</span><span class="op">)</span> , colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>dat <span class="op">=</span> <span class="va">sbordout</span><span class="op">$</span><span class="va">output_a0</span><span class="op">$</span><span class="va">data</span>,<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Prey</span>, y <span class="op">=</span> <span class="va">percentage_loss</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="co">#geom_smooth(dat = sbordout$output_a0$data,aes(x=Prey, y = percentage_loss), colour="orange",method = "loess") +</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"Adult mass loss"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">pCh</span> <span class="op">&lt;-</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="co">#geom_hline(yintercept = 0.5, lty= 2) +</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">produpper</span>, lty<span class="op">=</span> <span class="fl">2</span>, colour<span class="op">=</span><span class="st">"darkgrey"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">prodlower</span>, lty<span class="op">=</span> <span class="fl">2</span>, colour<span class="op">=</span><span class="st">"darkgrey"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">hi</span>, lty<span class="op">=</span><span class="fl">1</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="va">lo</span>, lty<span class="op">=</span><span class="fl">1</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>dat <span class="op">=</span> <span class="va">sbordout</span><span class="op">$</span><span class="va">output_c0</span><span class="op">$</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Prey</span>, y <span class="op">=</span> <span class="va">ChicksPerNest</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>dat <span class="op">=</span> <span class="va">sbordout</span><span class="op">$</span><span class="va">output_c0</span><span class="op">$</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Prey</span>, y <span class="op">=</span> <span class="va">ChicksPerNest</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="co">#geom_smooth(dat = sbordout$output_c0$data, aes(x=Prey, y = ChicksPerNest), colour="orange",method = "loess") +</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y <span class="op">=</span> <span class="st">"Chicks Per Nest"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">pBoth</span> <span class="op">&lt;-</span> <span class="fu">gridExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">grid.arrange</a></span><span class="op">(</span><span class="va">pAd</span>, <span class="va">pCh</span>, ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="E_exampleKI_calib_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

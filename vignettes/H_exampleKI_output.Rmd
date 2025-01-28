@@ -16,6 +16,141 @@ knitr::opts_chunk$set(
 )
 ```
 
+Load the seabORD package
+
 ```{r setup, warning = FALSE, message = FALSE}
 library(seabORD)
+library(ggplot2)
+library(magrittr) 
 ```
+
+```{r}
+### UK outline
+
+#uk_map <- dplyr::select(
+  #rnaturalearth::ne_countries(country = "United Kingdom",
+                              #scale = "medium",
+                              #returnclass = "sf"),
+  #name,
+  #geometry)
+
+#use coastline
+uk_map <- seabORD::cef_coast_4326
+
+
+### theme definition
+sysfonts::font_add_google("Montserrat", "montserrat")  # Base and heading font
+sysfonts::font_add_google("JetBrains Mono", "jetbrains_mono")  # Code font
+showtext::showtext_auto()
+
+theme_bslib <- ggplot2::theme(
+  plot.background = ggplot2::element_rect(fill = "#fff", color = NA),       # Background color
+  panel.background = ggplot2::element_rect(fill = "#EAEFEC", color = NA),  # Panel background (secondary)
+  panel.grid.major = ggplot2::element_line(color = "#EAEFEC"),             # Major grid lines
+  panel.grid.minor = ggplot2::element_line(color = "#EAEFEC"),             # Minor grid lines
+  axis.text = ggplot2::element_text(color = "#292C2F", family = "montserrat"),  # Axis text (foreground and font)
+  axis.title = ggplot2::element_text(color = "#292C2F", family = "montserrat"), # Axis titles
+  plot.title = ggplot2::element_text(color = "#0483A4", family = "montserrat", size = 16, face = "bold", hjust = 0.5), # Title
+  legend.background = ggplot2::element_rect(fill = "#fff", color = NA),    # Legend background
+  legend.key = ggplot2::element_rect(fill = "#EAEFEC", color = NA),        # Legend key
+  legend.text = ggplot2::element_text(color = "#292C2F", family = "montserrat"), # Legend text
+  plot.caption = ggplot2::element_text(color = "#292C2F", family = "jetbrains_mono"),
+  axis.title.x = ggplot2::element_blank(),  # Remove x-axis label
+  axis.title.y = ggplot2::element_blank(),# Caption for code font
+)
+```
+
+# Output - reading and interpretation
+
+The main output of seabORD is a list, where the different elements relate to respective parts of the model e.g., wind farm effects, adult outputs, chick outputs etc.
+
+We shall start by reading in an example created from a similar (but not identical) run with the same species (kittiwake), colony (Isle of May), and wind farm set up (Neart na Gaoithe and Inch Cape).
+
+## Read in example output
+
+```{r}
+sbordout <- seabORD::example_scenario_output
+#sbordout <- readRDS("C:/Users/chrpol/OneDrive - UKCEH/00000_SeabORD_Development/example_scenario_output.rds")
+
+str(sbordout)
+
+```
+
+As you can see this is an extensive output with 20 elements to the list. This is an output from JASMIN (to be replaced with locally conducted output) so some of the parts for example in \$parameters, will be slightly different. We include so much information so that the runs will be reproducible and are completely transparent in how they are produced.
+
+However the structure remains vastly the same and I will break down the main components:
+
+## Adult output (output_a0)
+
+```{r}
+# Isolate the adult output:
+adults <- sbordout$output_a0
+
+# Inspect the dataframe in a new page:
+View(adults)
+
+```
+
+You will see that there are 4 replicates of prey values here with respective rows for baseline ("Season\$base") and scenario ("Season\$scen") matched runs, giving a total of 8 rows.
+
+Conceivably, the average condition of adults across scenario runs at the end of the simulation (BM_adult.mn), will be lower than that for baseline runs. So let's plot that and have a look...
+
+```{r}
+ggplot2::ggplot()+
+  ggplot2::geom_boxplot(data=adults, aes(x=Season, y=BM_adult.mn)) +
+  ggplot2::theme_classic()
+```
+
+## Chick output (output_c0)
+
+```{r}
+# Isolate the adult output:
+chicks <- sbordout$output_c0
+
+# Inspect the dataframe in a new page:
+View(chicks)
+
+```
+
+Conceivably, the number of survivy chicks across scenario runs at the end of the simulation (N_alive_ch), will be lower than that for baseline runs...
+
+```{r}
+ggplot2::ggplot()+
+  ggplot2::geom_boxplot(data=chicks, aes(x=Season, y=N_alive_ch)) +
+  ggplot2::theme_classic()
+```
+
+## Flight related output (output_f0)
+
+```{r}
+# Isolate the adult output:
+flights <- sbordout$output_f0
+
+# Inspect the dataframe in a new page:
+View(flights)
+
+```
+
+"Tot_basickm.mn" is the mean per replicate of how many km birds flew - which would conceivably be higher for scenario runs due to barrier effects increasing flight distance, so let's do another basic plot:
+
+```{r}
+ggplot2::ggplot()+
+  ggplot2::geom_boxplot(data=flights, aes(x=Season, y=Tot_basickm.mn)) +
+  ggplot2::theme_classic()
+
+# and we can see that adults in the scenario run typically flew around 50km more on average over the simulation duration than birds with no wind farm interaction.
+```
+
+## Outputs relating to impacts (i0...5)
+
+-   Metric: Additional Mortality 1-i1: TRUE means birds never directly impacted
+
+-   Metric: Additional Mortality 1-i2: TRUE means birds directly impacted in some way at least once
+
+-   Metric: Additional Mortality 1-i3: TRUE means birds displaced at least once, never barriered
+
+-   Metric: Additional Mortality 1-i4: TRUE means birds barriered at least once, never displaced
+
+-   Metric: Additional Mortality 1-i5: TRUE means birds barriered and displaced at least once
+
+-   Metric: Additional Mortality 1-i6: All impacts grouped separately

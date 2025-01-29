@@ -245,8 +245,8 @@ Now that the inputs have been prepared by loading them into our environment we c
 
 
 # Save SeabORDsummary:
-# if (switches$saverds) {
-#     saveRDS(SeabORDoutput, file.path(modPar_example$outputdir, paste0("sb_out_", gsub("\\.", "_", make.names(paste0(modPar$reference,"_", Sys.Date()))),".rds")))
+# if (switches_example$saverds) {
+#     saveRDS(SeabORDoutput, file.path(modPar_example$outputdir, paste0("sb_out_", gsub("\\.", "_", make.names(paste0(modPar_example$reference,"_", Sys.Date()))),".rds")))
 # }
 ```
 

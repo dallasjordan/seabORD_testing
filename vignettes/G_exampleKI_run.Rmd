@@ -122,6 +122,7 @@ str(ordPar_example) # Including wind farms Nearth na Goithe and Inch Cape
 
 switches_example <- seabORD::example_1_lists$switches
 switches_example$savebirdflightmap <- TRUE # turn this switch on if you want to see an example of the birdflightmap output
+switches_example$saverds <- TRUE 
 ```
 
 ### Assorted spatial inputs
@@ -270,11 +271,11 @@ Now that all the inputs are ready we can run the model using:
 #                          fltdist_base = fltdist_base_example,
 #                          FlightGridcorrection = FlightGridcorrection,
 #                          ORDpoly = ORDpoly_example)
-
-# Save SeabORDsummary:
-# if (switches$saverds) {
-#     saveRDS(SeabORDoutput, file.path(modPar_example$outputdir, paste0("sb_out_", gsub("\\.", "_", make.names(paste0(modPar$reference,"_", Sys.Date()))),".rds")))
 # 
+# # Save SeabORDsummary:
+#  if (switches_example$saverds) {
+#     saveRDS("SeabORDoutput", file.path(modPar_example$outputdir, paste0("sb_out_", gsub("\\.", "_", make.names(paste0(modPar_example$reference,"_", Sys.Date()))),".rds")))
+# }
 ```
 
 SeabORD runs including wind farms and full populations can take a while to run - even with a relatively small population of \~ 3,000 pairs.

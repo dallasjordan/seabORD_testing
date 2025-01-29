@@ -90,30 +90,69 @@
     
     
 <div class="section level2">
-<h2 id="how-to-install-seabord">How to install seabORD<a class="anchor" aria-label="anchor" href="#how-to-install-seabord"></a>
+<h2 id="installing-required-packages">Installing required packages<a class="anchor" aria-label="anchor" href="#installing-required-packages"></a>
 </h2>
 <p><em>must have: RStudio with up to date R</em></p>
 <ol style="list-style-type: decimal">
 <li>
+<p>Install the “pacman” package which will facilitate the
+installation of all other required packages:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pacman"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Installing package into 'C:/Users/madtig/AppData/Local/Temp/RtmpC6eqNu/temp_libpathbe818f57a18'</span></span>
+<span><span class="co">#&gt; (as 'lib' is unspecified)</span></span>
+<span><span class="co">#&gt; package 'pacman' successfully unpacked and MD5 sums checked</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; The downloaded binary packages are in</span></span>
+<span><span class="co">#&gt;  C:\Users\madtig\AppData\Local\Temp\RtmpEtJNBd\downloaded_packages</span></span></code></pre></div>
+</li>
+<li>
+<p>Install all the required packages using pacman::p_load() - it
+should skip any packages that you already have installed.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pacman</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/pacman/man/p_load.html" class="external-link">p_load</a></span><span class="op">(</span><span class="va">dplyr</span>,<span class="va">forcats</span>,<span class="va">gdistance</span>,<span class="va">ggspatial</span>,<span class="va">magrittr</span>,<span class="va">memoise</span>,<span class="va">methods</span>,</span>
+<span>                  <span class="va">nleqslv</span>,<span class="va">purrr</span>,<span class="va">raster</span>,<span class="va">readr</span>,<span class="va">readxl</span>,<span class="va">rlang</span>,<span class="va">sf</span>,<span class="va">sp</span>,<span class="va">stats</span>,<span class="va">stringr</span>,</span>
+<span>                  <span class="va">tabularaster</span>,<span class="va">tibble</span>,<span class="va">tidyr</span>,<span class="va">utils</span>,<span class="va">ggplot2</span>,<span class="va">gridExtra</span><span class="op">)</span></span></code></pre></div>
+</li>
+</ol>
+</div>
+<div class="section level2">
+<h2 id="how-to-install-seabord">How to install seabORD<a class="anchor" aria-label="anchor" href="#how-to-install-seabord"></a>
+</h2>
+<ol style="list-style-type: decimal">
+<li>
 <p>unzip folder on computer and know the path to it (e.g.,):</p>
 <p>“C:/Users/madtig/Desktop/seabORD_pkg-main”</p>
+<p>Save this to path to an object:</p>
 </li>
+</ol>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># change to the </span></span>
+<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"C:"</span>,<span class="st">"Users"</span>,<span class="st">"madtig"</span>,<span class="st">"Desktop"</span>,<span class="st">"seabORD_pkg-main"</span>, fsep <span class="op">=</span> <span class="va">.Platform</span><span class="op">$</span><span class="va">file.sep</span><span class="op">)</span> </span></code></pre></div>
+<ol start="2" style="list-style-type: decimal">
 <li><p>open R Studio (not in the project of the zip file necessarily;
 just opening R should be enough)</p></li>
-<li><p>run in the console (with the right path</p></li>
+<li><p>Run the following code in the console with your defined
+path:</p></li>
 </ol>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span>pkgs <span class="op">=</span> <span class="st">"C:/Users/madtig/Desktop/seabORD_pkg-main"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span>pkgs <span class="op">=</span> <span class="va">path</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Installing package into 'C:/Users/madtig/AppData/Local/Temp/RtmpC6eqNu/temp_libpathbe818f57a18'</span></span>
+<span><span class="co">#&gt; (as 'lib' is unspecified)</span></span>
+<span><span class="co">#&gt; Warning in install.packages(pkgs = path, repos = NULL, type = "source"):</span></span>
+<span><span class="co">#&gt; installation of package 'C:/Users/madtig/Desktop/seabORD_pkg-main' had non-zero</span></span>
+<span><span class="co">#&gt; exit status</span></span></code></pre></div>
 <ol start="4" style="list-style-type: decimal">
 <li>load the package in an R script:</li>
 </ol>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"seabORD"</span><span class="op">)</span></span></code></pre></div>
 <ol start="5" style="list-style-type: decimal">
-<li>you can now follow the exmaple</li>
+<li>you can now follow the example!</li>
 </ol>
 </div>
-  </main>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

@@ -12,11 +12,6 @@ reference:
 - title: "Functions to run the model"
   contents:
   - seabord
-  - set_seedvalues
-  - set_medianprey
-  - set_initialbirdtype
-  - set_initialchickstate
-  - set_initialbirdstate
 - title: "Main functions behind the seabORD model"
   contents:
   - calc_adultbmchange
@@ -29,6 +24,13 @@ reference:
   - calc_strategy
   - calc_foragecapture
   - memoised_calc_foragecapture
+- title: "Other functions behind seabORD"
+  contents:
+  - set_seedvalues
+  - set_medianprey
+  - set_initialbirdtype
+  - set_initialchickstate
+  - set_initialbirdstate
 - title: "Datasets available"
   contents:
   - example_1_lists
@@ -48,5 +50,16 @@ reference:
   - offshorerenewabledevelopmentnames
   - ORDpoly_example
   - example_calibration_output
+articles:
+  - title: "Getting Started"
+    navbar: Getting Started
+    contents: [A_workshop, B_explanation_model, J_species_default,  I_main_functions]
+  - title: "Kittiwake example case"
+    navbar: Kittiwake example case
+    contents: [C_KI_inputs, D_KI_calib_decay, E_exampleKI_calib,F_KI_run_decay, G_exampleKI_run, H_exampleKI_output]
+  - title: "Help"
+    navbar: Help
+    contents: [K_FAQs]
+
 
 

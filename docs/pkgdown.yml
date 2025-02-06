@@ -1,5 +1,5 @@
 pandoc: '3.2'
-pkgdown: 2.0.9
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   A_workshop: A_workshop.html
@@ -13,5 +13,4 @@ articles:
   I_main_functions: I_main_functions.html
   J_species_default: J_species_default.html
   K_FAQs: K_FAQs.html
-last_built: 2025-02-06T11:13Z
-
+last_built: 2025-02-06T13:59Z

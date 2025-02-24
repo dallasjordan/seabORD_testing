@@ -30,7 +30,7 @@ This example is for kittiwakes at the Whinnyfold colony near Aberdeen, and the w
 
 This example will include the following steps:
 
-1.  Housekeeping - loading packages, sourcing functions, and loading data into environment
+1.  Housekeeping - loading packages and loading data into environment
 2.  Create a distance by sea map - required for producing distance decay map
 3.  Create distance decay map
 4.  Plot the distance decay map with OWFs
@@ -46,38 +46,42 @@ lapply(packages, library, character.only = TRUE)
 
 ```
 
-Source the functions:
-
-```{r}
-# set the path to where the data and function files are found:
-mypath <- "C:/Users/chrpol/Documents/seabord_pkg/seabORD_pkg/densitydecay"
-source(file.path(mypath, "functions_densitydecay.R")) 
-
-# now we can see the assorted range of functions uploaded into our environment 
-# e.g. "calc_dist_restricted" which is used to calculate the distance to sea cells either with or without wind farms, allowing us to calculate obstructed distance when OWFs are included. 
-calc_dist_restricted # enter a function name and run it view its inner workings
-```
-
 Load the data into environment:
 
 ```{r}
 
 # Load in the sea mask of the UK (shows which cells are on land and sea)
-seamask <- terra::rast(file.path(mypath,"seamask_3035.tif"))
-#terra::plot(seamask)
-searast <- raster::raster(seamask)
+example_data_seamask <- seabORD::seamask_3035_example
+
+#make a raster with the right dimension/proj/extents etc.
+seamask_example <- 
+  raster::raster(
+    nrows = example_data_seamask$metadata[["n_rows"]],
+    ncols = example_data_seamask$metadata[["n_cols"]],
+    xmn = example_data_seamask$metadata[["x_min"]],
+    xmx = example_data_seamask$metadata[["x_max"]],
+    ymn = example_data_seamask$metadata[["y_min"]],
+    ymx = example_data_seamask$metadata[["y_max"]],
+    crs = example_data_seamask$metadata[["crs"]]
+)
+
+#fill it with the data available
+searast <- raster::setValues(seamask_example, #the raster
+                                     example_data_seamask$matrix) #the values
+#Set the name of the layer
+names(searast) <- "seamask_3035"
 
 # Load in the UK coastline for plotting later:
-coastline <- readRDS(file.path(mypath,"cef_coast_3035.rds"))
+coastline <- seabORD::cef_coast_3035
 UK_coastline <- dplyr::filter(coastline, COUNTRY == "United Kingdom")
 UK_coastline_LAEA <- st_transform(UK_coastline, crs= "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs" )
 
 # Load in the wind farm polygons. In this case it is a shapefile containing the three wind farms closest to Whinnyfold (Hywind, Aberdeen Bay, Kincardine). You could upload any shapefiles you want - just ensure you transform them to the same coordinate reference system (EPSG:3035) and they are formatted in a similar fashion to the example.
-ORDpolys <- st_read(file.path(mypath,"owfpolys.shp"))
+ORDpolys <- seabORD::ORDpoly_example_wfold
 
 
 # Load the flight gird correction layer as geographic correction is necessary for gdistance calculations of the class Transition as they are made with >4 directions in our instance. This correction layer has been pre-calculated and covers the full map we are using. 
-load(file.path(mypath, "FlightGridcorrection_3035.RData")) 
+FlightGridcorrection_3035 <- seabORD::FlightGridcorrection_3035
 
 
 ```

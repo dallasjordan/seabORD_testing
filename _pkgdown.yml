@@ -56,7 +56,7 @@ articles:
     contents: [A_workshop, B_explanation_model, J_species_default,  I_main_functions]
   - title: "Kittiwake example case"
     navbar: Kittiwake example case
-    contents: [C_KI_inputs, D_KI_calib_decay, E_exampleKI_calib,F_KI_run_decay, G_exampleKI_run, H_exampleKI_output]
+    contents: [C_KI_inputs,D_DensityDecayMap, E_KI_calib_decay, F_exampleKI_calib,G_KI_run_decay, H_exampleKI_run, I_exampleKI_output]
   - title: "Help"
     navbar: Help
     contents: [K_FAQs]

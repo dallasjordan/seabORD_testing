@@ -13,7 +13,7 @@
 #' @param mymap A raster in which grid cells on land are assumed to have missing (NA) values
 #' @param obspolys Polygons associated with obstacles; if NULL there are assumed to be no obstacles other than land
 #' @param FlightGridcorrection_3035 The 'flight correction' layer required by gdistance to correct for latitude (see gdistance)
-# @inheritParams transition
+#' @inheritParams transition
 #' @param obspenalty Penalty value associated with crossing an obstruction; a positive number
 #' @param maxdist Maximum distance, in km; above this value are fixed to zero
 #' @importFrom gdistance transition

@@ -324,4 +324,39 @@
 "example_scenario_output"
 
 
+#' cef_coast_3035
+#'
+#' NEED EXPL
+#'
+#' @format NEED EXPL.
+#' \describe{
+#'   \item{COUNTRY }{Character: NEED EXPL.}
+#'   \item{ID_0}{Character: NEED EXPL}
+#'   \item{geometry}{Numeric: NEED EXPL}
+#' }
+#' @source  NEED EXPL
+"cef_coast_3035"
+
+
+#' ORDpoly_example_wfold
+#'
+#' NEED EXPL
+#'same projection as seamask
+#' @format tibble
+#' \describe{
+#'   \item{COUNTRY}{NEED EXPL}
+#'   \item{NAME}{NEED EXPL}
+#'   \item{N_TURBINES}{NEED EXPL}
+#'   \item{POWER_MW}{NEED EXPL}
+#'   \item{STATUS}{NEED EXPL}
+#'   \item{YEAR}{NEED EXPL}
+#'   \item{COAST_DIST_M}{NEED EXPL}
+#'   \item{AREA_SQKM}{NEED EXPL}
+#'   \item{NOTES}{NEED EXPL}
+#'   \item{Shape_Length}{NEED EXPL}
+#'   \item{Shape_Area}{NEED EXPL}
+#' }
+#' @source NEED EXPL
+"ORDpoly_example_wfold"
+
 

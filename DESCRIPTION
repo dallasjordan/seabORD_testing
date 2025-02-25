@@ -14,7 +14,7 @@ Description: A model to estimate the population consequences of
     key seabird species
 License: OGL
 Depends: 
-    R (>= 2.10),
+    R (>= 3.5),
     dplyr,
     forcats,
     gdistance,

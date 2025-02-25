@@ -43,12 +43,14 @@ reference:
   - BrdData_example
   - frgcompdata_example
   - cef_coast_4326
+  - cef_coast_3035
   - seamask_3035_example
   - spacoordinates
   - UK9004171_bysea_3035
   - FlightGridcorrection_3035
   - offshorerenewabledevelopmentnames
   - ORDpoly_example
+  - ORDpoly_example_wfold
   - example_calibration_output
 articles:
   - title: "Getting Started"

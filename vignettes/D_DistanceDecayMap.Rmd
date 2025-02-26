@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Creating density-decay maps
+# Introduction to distance-decay maps
 
 In cases where there is no local GPS data available users are recommended to estimate a bird density based on a distance-decay function, and use this as their bird distribution map in the model.
 
@@ -26,25 +26,17 @@ We provide an example here of how this can be done, using similar parameters to 
 
 This example is for kittiwakes at the Whinnyfold colony near Aberdeen, and the wind farms used are Aberdeen Bay, Hywind and Kincardine, but it should be relatively straightforward to implement this code with your own colony and wind farm footprints, as all you will need to supply is the colony coordinates and your own set of shapefiles for the wind farms.
 
-**Please note** that the parameters we have used in the distance decay map creation (foraging range, "fr", and percentage in foraging range, "pinfr") are for example sake and you will need to make your own judgments here based on existing knowledge of the species and the locality.
+**PLEASE NOTE** that the parameters we have used in the distance decay map creation (foraging range, "fr", and percentage in foraging range, "pinfr") are just an example and you will need to make your own judgments here based on existing knowledge of the species and the locality.
 
 This example will include the following steps:
 
-1.  Housekeeping - loading packages and loading data into environment
+1.  Loading data - getting the required data into R environment
 2.  Create a distance by sea map - required for producing distance decay map
 3.  Create distance decay map
 4.  Plot the distance decay map with OWFs
 5.  Assess the interaction with OWFs
 
 ## 1. Housekeeping
-
-Load the required packages:
-
-```{r setup, warning = FALSE, message = FALSE}
-packages <- c("ggplot2", "dplyr", "sf", "terra", "gdistance", "ggspatial")
-lapply(packages, library, character.only = TRUE)
-library(seabORD)
-```
 
 Load the data into environment:
 
@@ -88,7 +80,9 @@ FlightGridcorrection_3035 <- seabORD::FlightGridcorrection_3035
 
 ## 2. Distance by sea map
 
-First we set the colony location, in this case Whinnyfold, but you could change this to any colony around the UK that you wish to model. **PLEASE NOTE:** these calculations will not work if the set location is on land. It needs to be placed beside or on the sea cells so it is not completely obstructed by land cells which are defined as impassable. We recommend checking this with a plot.
+First we set the colony location, in this case Whinnyfold, but you could change this to any colony around the UK that you wish to model.
+
+**PLEASE NOTE** these calculations will not work if the set location is on land. It needs to be placed beside or on the sea cells so it is not completely obstructed by land cells which are defined as impassable. We recommend checking this with a plot.
 
 ```{r}
 # Set the location of our colony at Whinnyfold and transform it to LAEA projection:
@@ -96,7 +90,7 @@ colony <- sf::st_as_sf(data.frame(lon = -1.85849, lat = 57.388807), coords = c("
 colonyLAEA <- sf::st_transform(colony, crs = "EPSG:3035")  # Convert to LAEA Europe
 
 # check the colony location is beside sea cells:
-expand_km <- 2 # how far to expand the plot in km on either side of the colony
+expand_km <- 1 # how far to expand the plot in km on either side of the colony
 ggplot2::ggplot() +
   ggplot2::geom_sf(data=UK_coastline_LAEA, fill = "grey", colour="black") +  # coastline
   ggplot2::geom_sf(data=colonyLAEA, colour="blue", pch=4, size =4)+          # colony
@@ -104,7 +98,8 @@ ggplot2::ggplot() +
     xlim=c(sf::st_coordinates(colonyLAEA)[,1] - (expand_km*1000), sf::st_coordinates(colonyLAEA)[,1] + (expand_km*1000)),
     ylim=c(sf::st_coordinates(colonyLAEA)[,2] - (expand_km*1000), sf::st_coordinates(colonyLAEA)[,2] + (expand_km*1000)), expand = FALSE) +
   ggspatial::annotation_scale(location = "tr", width_hint = 0.5)
-  
+# from this plot we can see that the location is not on the land polygon, so we can proceed with peace of mind. 
+
 
 # Create you distance by sea map using the function calc_dist_restricted
 DBS_map <- seabORD::calc_dist_restricted(mymap=searast,
@@ -194,7 +189,7 @@ ggplot2::ggplot() +
 
 ## 5. Interaction assessment
 
-Now using the "calc_dist_restricted" function again, we can calculate the distance to all cells, but this time including the obstruction of the wind farms. The output is a map with distance to the colony from all cells, but including the extra distance to fly around wind farm buffers, which can give us a sense of barrier effects. We can also estimate the percentage of birds that will be displaced per time step, which can be used to estimate the number of birds being displaced by multiplying by the colony size.
+Now using the "calc_dist_restricted" function again, we can calculate the distance to all cells, but this time including the obstruction of the wind farms. The output is a map with distance to the colony from all cells, but including the extra distance to fly around wind farm buffers, which can give us a sense of barrier effects. We can also estimate the percentage of birds that will potentially be displaced per time step. This can be used to estimate the number of birds being displaced per time step by multiplying the proportion of the simulated UD within the polygon (plus buffer) by the displacement rate and by the colony size.
 
 ```{r}
 

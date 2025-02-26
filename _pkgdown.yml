@@ -52,6 +52,14 @@ reference:
   - ORDpoly_example
   - ORDpoly_example_wfold
   - example_calibration_output
+- title: "seabORD distance decay"
+  contents:
+  - calc_birddensmap_dd_pinfr
+  - calc_birddensmap_dd_pinhalf
+  - calc_dd_phalf_from_pinfr
+  - calc_dd_pinfr_from_phalf
+  - calc_dist_restricted
+  - voptimise
 articles:
   - title: "Getting Started"
     navbar: Getting Started

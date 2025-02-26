@@ -35,7 +35,8 @@ Depends:
     tabularaster,
     tibble,
     tidyr,
-    utils
+    utils,
+    gridExtra
 Suggests: 
     boot,
     ggplot2,

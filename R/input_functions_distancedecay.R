@@ -13,12 +13,12 @@
 #' @param mymap A raster in which grid cells on land are assumed to have missing (NA) values
 #' @param obspolys Polygons associated with obstacles; if NULL there are assumed to be no obstacles other than land
 #' @param FlightGridcorrection_3035 The 'flight correction' layer required by gdistance to correct for latitude (see gdistance)
-#' @inheritParams transition
 #' @param obspenalty Penalty value associated with crossing an obstruction; a positive number
 #' @param maxdist Maximum distance, in km; above this value are fixed to zero
 #' @importFrom gdistance transition
 #' @importFrom raster xyFromCell calc
 #' @return Raster, containing distance to target from each grid, avoiding obstructions, in kilometres
+#' @export
 
 calc_dist_restricted <- function(mymap, obspolys=NULL, targetcoords,
                                  FlightGridcorrection_3035, directions=16,
@@ -93,7 +93,7 @@ calc_dist_restricted <- function(mymap, obspolys=NULL, targetcoords,
 #' @param pinfr The proportion of the UD that is assumed to lie within a distance `fr` of the population: a numeric value between 0 and 1
 #' @return A raster containing the distance-decay map
 #' ## 20 Oct 2023: added "dmin" argument
-
+#' @export
 calc_birddensmap_dd_pinfr <- function(dmap, fr, pinfr, dmin=1){
 
   if(mode(dmap) == "logical"){ ## added 20 Oct 2023
@@ -125,7 +125,7 @@ calc_birddensmap_dd_pinfr <- function(dmap, fr, pinfr, dmin=1){
 #' @inheritParams calc_birddensmap_dd_pinfr
 #' @param pinhalf the proportion of the foraging range within which half of the UD lies
 #' @return A raster containing the distance-decay map
-
+#' @export
 calc_birddensmap_dd_pinhalf <- function(dmap, fr, pinhalf){
 
   pinfr <- calc_dd_pinfr_from_phalf(pinhalf) ## 20 Oct 2023: moved to separate row to make debugging easier
@@ -142,7 +142,7 @@ calc_birddensmap_dd_pinhalf <- function(dmap, fr, pinhalf){
 #' We can immediately derive: `phalf = log(1 - (pinfr/2)) / log(1 - pinfr)`
 #' @param pinfr A vector of numeric values containing the values of 'pinfr'
 #' @return A vector of length `length(pinfr)` containing the values of `phalf` associated with `pinfr`
-
+#' @export
 calc_dd_phalf_from_pinfr <- function(pinfr){log(1-(pinfr/2)) / log(1-pinfr)}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,7 +151,7 @@ calc_dd_phalf_from_pinfr <- function(pinfr){log(1-(pinfr/2)) / log(1-pinfr)}
 #' This is optimized numerically
 #' @param phalf A vector of numeric values containing the values of 'phalf'
 #' @return A vector of length `length(q)` containing the values of `pinfr` associated with `phalf`
-
+#' @export
 calc_dd_pinfr_from_phalf <- function(phalf){ voptimise(y = phalf, fny = calc_dd_phalf_from_pinfr, iv = c(0,1)) }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,7 +160,7 @@ calc_dd_pinfr_from_phalf <- function(phalf){ voptimise(y = phalf, fny = calc_dd_
 #' @param fny A function with a single argument `x` that produces the value of `y` associated with `x`
 #' @param iv A vector of length two indicating the numerical range of values to optimize over
 #' @return A vector of numeric values of lengt `y` containing the value of `x` associated with each value of `y`
-
+#' @export
 voptimise <- function(y, fny, iv){
 
   optfn <- function(x,y,fny){ abs(y - fny(x)) }

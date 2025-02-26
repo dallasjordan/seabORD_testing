@@ -1,0 +1,18 @@
+pandoc: '3.2'
+pkgdown: 2.0.9
+pkgdown_sha: ~
+articles:
+  A_workshop: A_workshop.html
+  B_explanation_model: B_explanation_model.html
+  C_KI_inputs: C_KI_inputs.html
+  D_DensityDecayMap: D_DensityDecayMap.html
+  E_KI_calib_decay: E_KI_calib_decay.html
+  F_exampleKI_calib: F_exampleKI_calib.html
+  G_KI_run_decay: G_KI_run_decay.html
+  H_exampleKI_run: H_exampleKI_run.html
+  I_exampleKI_output: I_exampleKI_output.html
+  I_main_functions: I_main_functions.html
+  J_species_default: J_species_default.html
+  K_FAQs: K_FAQs.html
+last_built: 2025-02-26T09:54Z
+

@@ -58,7 +58,7 @@
     <div class="dropdown-divider"></div>
     <h6 class="dropdown-header" data-toc-skip>Kittiwake example case</h6>
     <a class="dropdown-item" href="../articles/C_KI_inputs.html">Example kittiwake:  step 1 - seabORD inputs</a>
-    <a class="dropdown-item" href="../articles/D_DensityDecayMap.html">Example: step 1.1 - creating a density decay map</a>
+    <a class="dropdown-item" href="../articles/D_DistanceDecayMap.html">Example: step 1.1 - creating a distance-decay map</a>
     <a class="dropdown-item" href="../articles/E_KI_calib_decay.html">Example kittiwake:  step 2.1 - seabORD calibration - distance decay</a>
     <a class="dropdown-item" href="../articles/F_exampleKI_calib.html">Example kittiwake:  step 2.2 - seabORD calibration - GPS maps</a>
     <a class="dropdown-item" href="../articles/G_KI_run_decay.html">Example kittiwake:  step 3.1 - seabORD run - distance decay</a>
@@ -104,14 +104,7 @@
 <p>Install the “pacman” package which will facilitate the
 installation of all other required packages:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pacman"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; The following package(s) will be installed:</span></span>
-<span><span class="co">#&gt; - pacman [0.5.1]</span></span>
-<span><span class="co">#&gt; These packages will be installed into "C:/Users/madtig/AppData/Local/Temp/RtmpQ3loBg/temp_libpath468726d692f".</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; # Installing packages --------------------------------------------------------</span></span>
-<span><span class="co">#&gt; - Installing pacman ...                         OK [copied from cache in 1.2s]</span></span>
-<span><span class="co">#&gt; Successfully installed 1 package in 1.3 seconds.</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">#install.packages("pacman")</span></span></code></pre></div>
 </li>
 <li>
 <p>Install all the required packages using pacman::p_load() - it
@@ -141,8 +134,7 @@ path:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"C:"</span>,<span class="st">"Users"</span>,<span class="st">"madtig"</span>,<span class="st">"Desktop"</span>,<span class="st">"seabORD_pkg-main"</span>, fsep <span class="op">=</span> <span class="va">.Platform</span><span class="op">$</span><span class="va">file.sep</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span>pkgs <span class="op">=</span> <span class="va">path</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; - There are no packages to install.</span></span></code></pre></div>
+<span><span class="co">#install.packages(pkgs = path, repos = NULL, type = "source")</span></span></code></pre></div>
 <ol start="4" style="list-style-type: decimal">
 <li>load the package in an R script:</li>
 </ol>

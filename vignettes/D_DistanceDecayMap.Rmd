@@ -86,7 +86,8 @@ First we set the colony location, in this case Whinnyfold, but you could change 
 
 ```{r}
 # Set the location of our colony at Whinnyfold and transform it to LAEA projection:
-colony <- sf::st_as_sf(data.frame(lon = -1.85849, lat = 57.388807), coords = c("lon", "lat"), crs = 4326)
+colony <- sf::st_as_sf(data.frame(lon = -1.85849, lat = 57.388807),
+                       coords = c("lon", "lat"), crs = 4326)
 colonyLAEA <- sf::st_transform(colony, crs = "EPSG:3035")  # Convert to LAEA Europe
 
 # check the colony location is beside sea cells:
@@ -99,7 +100,6 @@ ggplot2::ggplot() +
     ylim=c(sf::st_coordinates(colonyLAEA)[,2] - (expand_km*1000), sf::st_coordinates(colonyLAEA)[,2] + (expand_km*1000)), expand = FALSE) +
   ggspatial::annotation_scale(location = "tr", width_hint = 0.5)
 # from this plot we can see that the location is not on the land polygon, so we can proceed with peace of mind. 
-
 
 # Create you distance by sea map using the function calc_dist_restricted
 DBS_map <- seabORD::calc_dist_restricted(mymap=searast,

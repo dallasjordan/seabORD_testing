@@ -5,7 +5,7 @@ articles:
   A_workshop: A_workshop.html
   B_explanation_model: B_explanation_model.html
   C_KI_inputs: C_KI_inputs.html
-  D_DensityDecayMap: D_DensityDecayMap.html
+  D_DistanceDecayMap: D_DistanceDecayMap.html
   E_KI_calib_decay: E_KI_calib_decay.html
   F_exampleKI_calib: F_exampleKI_calib.html
   G_KI_run_decay: G_KI_run_decay.html
@@ -14,5 +14,5 @@ articles:
   I_main_functions: I_main_functions.html
   J_species_default: J_species_default.html
   K_FAQs: K_FAQs.html
-last_built: 2025-02-26T09:54Z
+last_built: 2025-02-27T15:29Z
 

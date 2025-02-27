@@ -33,13 +33,13 @@ calc_dist_restricted <- function(mymap, obspolys=NULL, targetcoords,
 
     polys_whichcells <- unlist(lapply(raster::extract(mymap, polys_stc, cellnumbers=TRUE), function(x){x[,1]}))
 
-    values(mymap)[unique(polys_whichcells)] <- NA
+    raster::values(mymap)[unique(polys_whichcells)] <- NA
   }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Step 2. Penalty for crossing each grid cell: one for sea, "obspenalty" for land
-  cellpenalty <- mymap %>%
-    raster::calc(fun = function(r) { r[!is.na(r)] <- 1 ; r[is.na(r)] <- obspenalty; return(r) })
+  cellpenalty <-
+    raster::calc(mymap, fun = function(r) { r[!is.na(r)] <- 1 ; r[is.na(r)] <- obspenalty; return(r) })
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Step 3. Make the TransitionLayer with new obstructions
@@ -74,9 +74,12 @@ calc_dist_restricted <- function(mymap, obspolys=NULL, targetcoords,
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Step 9. Restricted distance
-  resdist <- mymap; values(resdist) <- NA
+  resdist <- raster::raster(mymap)
+  raster::values(resdist) <- NA
   resdist[unres_whichcells] <- costdist_km
   resdist[resdist > maxdist] <- 0
+
+  resdist[] <- as.numeric(resdist[])
 
   resdist
 }

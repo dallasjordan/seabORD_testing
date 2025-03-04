@@ -42,6 +42,8 @@ Load the data into environment:
 
 ```{r}
 
+library(magrittr)
+
 # Load in the sea mask of the UK (shows which cells are on land and sea)
 example_data_seamask <- seabORD::seamask_3035_example
 
@@ -109,7 +111,7 @@ DBS_map <- seabORD::calc_dist_restricted(mymap=searast,
                                   directions=16, obspenalty=1e+08,
                                   maxdist=300)
 
-plot(DBS_map)
+terra::plot(DBS_map)
 ```
 
 ## 3. Distance decay map
@@ -134,7 +136,7 @@ pinhalf <- 0.95 # value between 0 and 1
 DD_map <- seabORD::calc_birddensmap_dd_pinhalf(dmap, fr, pinhalf)
 
 # plot to view:
-plot(DD_map)
+terra::plot(DD_map)
 
 # cropped plot:
 km_to_left  <- 30
@@ -146,7 +148,7 @@ crop_extent_raster <- raster::extent(sf::st_bbox(colonyLAEA)$xmin - (km_to_left 
                                         sf::st_bbox(colonyLAEA)$ymin - (km_down * 1000),
                                         sf::st_bbox(colonyLAEA)$ymin + (km_up * 1000))
 DD_map_cropped <- raster::crop(DD_map, crop_extent_raster)
-plot(DD_map_cropped)
+terra::plot(DD_map_cropped)
 
 ```
 
@@ -156,16 +158,16 @@ Now that we have made the density decay map, let's plot it with the ORD footprin
 
 ```{r}
 # create a dataframe of your ddmap as ggplot requires it in this format:
-DD_map_cropped_df <- as.data.frame(as.data.frame(DD_map_cropped, xy=TRUE))  # Converts to x, y, value
+DD_map_cropped_df <- terra::as.data.frame(DD_map_cropped, xy=TRUE)  # Converts to x, y, value
 colnames(DD_map_cropped_df) <- c("x", "y", "density")
 
 # Add a 2km buffer to the ORD footprint and reformat
 bufferwidth <- 2
 ORDpolys_with_buffer_1 <- sf::st_buffer(ORDpolys, bufferwidth * 1000)
 ORDpolys_with_buffer <- ORDpolys_with_buffer_1 %>%
-    sf::st_cast("POLYGON") %>%               # Convert to individual polygons
-    dplyr::mutate(names = paste0("ord", dplyr::row_number())) %>%  
-    dplyr::rename(x = geometry)  
+  sf::st_cast("POLYGON") %>%               # Convert to individual polygons
+  dplyr::mutate(names = paste0("ord", dplyr::row_number())) %>%  
+  dplyr::rename(x = geometry)  
 
 # crop the UK coastline to the extent set above to reduce plot rendering time 
 UK_coastline_cropped <- sf::st_crop(UK_coastline_LAEA, crop_extent_raster)
@@ -213,7 +215,7 @@ smalltol <- 0.01
 # create a layer which is the difference between with and without ORDs:
 obstructed <- ((DBS_withORDs - DBS_map) > smalltol)
 obstructed_cropped <- raster::crop(obstructed, crop_extent_raster)
-plot(obstructed_cropped)
+terra::plot(obstructed_cropped)
 
 # calculate percentage in ORD and buffer, and the percentage in the "shadow"/barriered area:
 out <- data.frame(

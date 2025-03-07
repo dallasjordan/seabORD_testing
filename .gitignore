@@ -2,5 +2,6 @@
 inst/doc
 /doc/
 /Meta/
+/local/
 /renv/library/
 pkgdown_publish_code.R

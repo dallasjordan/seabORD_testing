@@ -226,7 +226,8 @@ created in step 2</li>
 <strong>fr</strong> - foraging range (km)</li>
 <li>
 <strong>pinhalf</strong> - the proportion of the foraging range
-within which half of the UD lies</li>
+within which half of the bird distribution map (utilisation
+distribution) lies</li>
 </ol>
 <p>The function then returns a raster containing the distance-decay
 map.</p>
@@ -303,12 +304,13 @@ ORD footprints to check that they overlap.</p>
 the distance to all cells, but this time including the obstruction of
 the wind farms. The output is a map with distance to the colony from all
 cells, but including the extra distance to fly around wind farm buffers,
-which can give us a sense of barrier effects. We can also estimate the
-percentage of birds that will potentially be displaced per time step.
-This can be used to estimate the number of birds being displaced per
-time step by multiplying the proportion of the simulated UD within the
-polygon (plus buffer) by the displacement rate and by the colony
-size.</p>
+which can give us a sense of barrier effects, but not compute them
+directly.</p>
+<p>We can also estimate the percentage of birds that will be displaced
+per time step. This can be used to estimate the number of birds being
+displaced per time step by multiplying the proportion of the simulated
+bird distribution map (utilisation distribution) within the polygon
+(plus buffer) by the displacement rate and by the colony size.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># First lets do a quick assessment of the percentage of the density decay map being occupied by the ORDs and their buffers.</span></span>

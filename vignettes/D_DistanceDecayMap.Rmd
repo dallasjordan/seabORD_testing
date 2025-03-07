@@ -122,7 +122,7 @@ The inputs which it takes are as follows:
 
 1.  **dmap** - the distance by sea map which we just created in step 2
 2.  **fr** - foraging range (km)
-3.  **pinhalf** - the proportion of the foraging range within which half of the UD lies
+3.  **pinhalf** - the proportion of the foraging range within which half of the bird distribution map (utilisation distribution) lies
 
 The function then returns a raster containing the distance-decay map.
 
@@ -191,7 +191,9 @@ ggplot2::ggplot() +
 
 ## 5. Interaction assessment
 
-Now using the "calc_dist_restricted" function again, we can calculate the distance to all cells, but this time including the obstruction of the wind farms. The output is a map with distance to the colony from all cells, but including the extra distance to fly around wind farm buffers, which can give us a sense of barrier effects. We can also estimate the percentage of birds that will potentially be displaced per time step. This can be used to estimate the number of birds being displaced per time step by multiplying the proportion of the simulated UD within the polygon (plus buffer) by the displacement rate and by the colony size.
+Now using the "calc_dist_restricted" function again, we can calculate the distance to all cells, but this time including the obstruction of the wind farms. The output is a map with distance to the colony from all cells, but including the extra distance to fly around wind farm buffers, which can give us a sense of barrier effects, but not compute them directly.
+
+We can also estimate the percentage of birds that will be displaced per time step. This can be used to estimate the number of birds being displaced per time step by multiplying the proportion of the simulated bird distribution map (utilisation distribution) within the polygon (plus buffer) by the displacement rate and by the colony size.
 
 ```{r}
 

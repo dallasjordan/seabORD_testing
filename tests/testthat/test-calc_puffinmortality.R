@@ -1,5 +1,6 @@
 testthat::test_that("multiplication works", {
 
+  load("~/repositories/SeabORD/seabORD/local/test_values_v2.rdata")
   data <- all_together_now$calc_puffinmortality
 
   # Test 1: If puffin is already dead, CoD remains unchanged

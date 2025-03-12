@@ -16,9 +16,31 @@ knitr::opts_chunk$set(
 )
 ```
 
+There are 9 main functions behind the seabORD model:
+
+[1. Body mass increase for adult birds] ("calc_adultbmchage")
+
+[2. Calculate Daily Energy Requirement] ("calc_adultdee")
+
+[3. Probability of winter survival] ("calc_pSurvival")
+
+[4. Puffin chick mortality from predation due to hunger] ("calc_puffinmortality")
+
+[5. Chick mortality as a result of other causes] ("calc_othermortality")
+
+[6. Chick mortality as a result of adults not attending the nest] ("calc_unattendmortality")
+
+[7. Parenting the chicks] ("calc_chickcare")
+
+[8. Calculate the time taken to forage required amount] ("calc_foragecapture")
+
+[9. Calculate the foraging strategy for the timestep]("calc_strategy)
+
+In the following chapters we describe with practical examples each of them.
+
 ------------------------------------------------------------------------
 
-# Body mass increase for adult birds
+# 1. Body mass increase for adult birds
 
 *(calc_adultbmchage)*
 
@@ -65,9 +87,9 @@ In this example, a single bird with a body mass of 380g and a Energy density of 
 
 ```{r}
 
-BM_adult <- 380
-Ereq_adult <- 1248 #kJ
-adult_mass_KG <- 38
+BM_adult <- 354.51
+Ereq_adult <- 1569.75 #kJ
+adult_mass_KG <- 38.5
 Egain_adult <- c(0:Ereq_adult)
   
 bodymass <- 
@@ -149,7 +171,7 @@ print(plot)
 
 ------------------------------------------------------------------------
 
-# Calculate Daily Energy Requirement
+# 2. Calculate Daily Energy Requirement
 
 *(calc_adultdee)*
 
@@ -230,16 +252,16 @@ Ereq_adult <- calc_adultdee(
   
   alive = TRUE, #bird alive
   
-  colony_h = 12,
-  flying_h = 5,
-  foraging_h = 6,
-  at_sea_h = 1,
+  colony_h = 18,
+  flying_h = 5.26,
+  foraging_h = 11.23,
+  at_sea_h = 1.5,
   
-  energy_nest = 427.75,
-  energy_flight = 1400.74,
-  energy_forage = 1400.74,
-  energy_searest = 400.57,
-  energy_warming = 34.15,
+  energy_nest = 427.8,
+  energy_flight = 1400.7,
+  energy_forage = 1400.7,
+  energy_searest = 400.6,
+  energy_warming = 26,
   
   assim_eff = 0.74,
   daylength = 36
@@ -257,16 +279,16 @@ Ereq_adult <- calc_adultdee(
   
   alive = FALSE, #bird not alive
   
-  colony_h = 12,
-  flying_h = 5,
-  foraging_h = 6,
-  at_sea_h = 1,
+  colony_h = 18,
+  flying_h = 5.26,
+  foraging_h = 11.23,
+  at_sea_h = 1.5,
   
-  energy_nest = 427.75,
-  energy_flight = 1400.74,
-  energy_forage = 1400.74,
-  energy_searest = 400.57,
-  energy_warming = 34.15,
+  energy_nest = 427.8,
+  energy_flight = 1400.7,
+  energy_forage = 1400.7,
+  energy_searest = 400.6,
+  energy_warming = 26,
   
   assim_eff = 0.74,
   daylength = 36
@@ -278,7 +300,7 @@ print(Ereq_adult)
 
 ------------------------------------------------------------------------
 
-# Probability of winter survival
+# 3. Probability of winter survival
 
 *(calc_pSurvival)*
 
@@ -327,9 +349,9 @@ calc_pSurvival <- function (sp, bmi, bm, basesurv, beta, sd = 0) {
 ```{r}
 
 p <- calc_pSurvival(sp = "KI",
-                    bmi = 345.9,
-                    bm= 370.8,
-                    basesurv= 0.8,
+                    bmi = 329.59,
+                    bm= 342.15,
+                    basesurv= 0.65,
                     beta = 0.038
                     ) #sd non-specified, so 0
 
@@ -340,18 +362,18 @@ print(p)
 
 ```{r}
 p2 <- calc_pSurvival(sp = "GU", 
-                     bmi = 345.9,
-                     bm = 370.8,
-                     basesurv = 0.92,
-                     beta = 1.03,
-                     sd = 50)
+                     bmi = 340.37,
+                     bm = 344.49,
+                     basesurv = 0.80,
+                     beta = 0.038,
+                     sd = 34.41)
 print(p2)
 
 ```
 
 ------------------------------------------------------------------------
 
-# Puffin chick mortality from predation due to hunger
+# 4. Puffin chick mortality from predation due to hunger
 
 *(calc_puffinmortality)*
 
@@ -415,8 +437,8 @@ set.seed(123)
 #it doesn't die (unvaried cod)
 new_CoD <- calc_puffinmortality(CoD = "none", #alive
                                 alive = 1, #alive
-                                BM_condition = 0.5, #hungry
-                                BM_Chick_mortf = 0.3)
+                                BM_condition = 0.82, #hungry
+                                BM_Chick_mortf = 0.6)
 
 print(new_CoD)
 ```
@@ -440,7 +462,7 @@ If the puffin is not alive to begin with; the cause of death remains unvaried.
 ```{r}
 new_CoD <- calc_puffinmortality(CoD = "starved", #already dead
                                 alive = 0, #dead
-                                BM_condition = 0.5,
+                                BM_condition = 0.99,
                                 BM_Chick_mortf = 0.3)
 
 print(new_CoD)
@@ -448,7 +470,7 @@ print(new_CoD)
 
 ------------------------------------------------------------------------
 
-# Chick mortality as a result of other causes
+# 5. Chick mortality as a result of other causes
 
 *(calc_othermortality)*
 
@@ -510,7 +532,7 @@ print(new_CoD)
 
 ------------------------------------------------------------------------
 
-# Chick mortality as a result of adults not attending the nest
+# 6. Chick mortality as a result of adults not attending the nest
 
 *(calc_unattendmortality)*
 
@@ -554,7 +576,7 @@ The chick remains alive.
 new_CoD <- calc_unattendmortality(CoD = "none", #alive
                                   alive = 1, #alive
                                   unattend_hrs = 0, #no attended hours
-                                  max_hrs = 12)
+                                  max_hrs = 18)
 
 print(new_CoD)
 ```
@@ -568,7 +590,7 @@ new_CoD <-  replicate(1000,#repeat the function to get a few cases where it caus
                       calc_unattendmortality(CoD = "none", #alive
                                    alive = 1, #alive
                                    unattend_hrs = 6,
-                                   max_hrs = 12)
+                                   max_hrs = 18)
                       )
 
 print(table(new_CoD))
@@ -618,7 +640,7 @@ print(new_CoD)
 
 ------------------------------------------------------------------------
 
-# Parenting the chicks
+# 7. Parenting the chicks
 
 *(calc_chickcare)*
 
@@ -730,11 +752,31 @@ calc_chickcare <- function(parent, ChickState, Opt_BM_chick, Species){
 
 ## Practical examples
 
-### **Example 1 -**
+### **Example 1**
+
+```{r}
+
+parent <- tibble::tibble(BirdID = c(1, 2, 3, 4),
+                                 PairID = c(1, 1, 2, 2),
+                                 feeding_mode = c(1, 1, 1, 1),
+                                 Ereq_intakef_c = c(0.77, 0.73, 0.87,  0.62),
+                                 colony_h = c(18, 18, 19, 18),
+                                 MF = c("M", "F", "M", "F")
+                                 )
+
+Opt_BM_chick <- data.frame(timestep = c(0:30),
+                           Opt_BM_chick = c(36, 47, 58, 69, 80, 91, 102, 113, 124, 135, 146, 157, 168, 179, 190, 201, 212, 223, 234, 245, 256, 267, 278, 289, 300, 311, 322, 333, 344, 355, 366))
+
+result <- 
+  calc_chickcare(parent = parent,
+                 ChickState = list(c(1, 1, 1, 1)),
+                 Opt_BM_chick = ,
+                 Species)
+```
 
 ------------------------------------------------------------------------
 
-# Calculate the time taken to forage required amount
+# 8. Calculate the time taken to forage required amount
 
 *calc_foragecapture*
 
@@ -811,9 +853,9 @@ calc_foragecapture <- function(x0, h, a, maxt){
 ### **Example 1**
 
 ```{r}
-x0 <- 201
-h <- 700
-a <- 2
+x0 <- 260
+h <- 973
+a <- 4.369
 maxt <- 2160
 
 out <- calc_foragecapture(x0, h, a, maxt)
@@ -824,10 +866,11 @@ plot(out$tmin, out$captured_g)
 ### **Example 2**
 
 ```{r}
-x0 <- 201
-h <- 977
-a <- 4.37
-maxt <- 2160
+x0 <- 50
+h <- 939
+a <- 4.1
+maxt <- 2000
+
 
 out <- calc_foragecapture(x0, h, a, maxt)
 
@@ -836,7 +879,7 @@ plot(out$tmin, out$captured_g)
 
 ------------------------------------------------------------------------
 
-# **Calculate the foraging strategy for the timestep**
+# **9. Calculate the foraging strategy for the timestep**
 
 (*calc_strategy*)
 

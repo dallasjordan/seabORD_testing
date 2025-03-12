@@ -95,9 +95,33 @@
 
     
     
+<p>There are 9 main functions behind the seabORD model:</p>
+<p><a href="#body-mass-increase-for-adult-birds">1. Body mass increase
+for adult birds</a> (“calc_adultbmchage”)</p>
+<p><a href="#calculate-daily-energy-requirement">2. Calculate Daily
+Energy Requirement</a> (“calc_adultdee”)</p>
+<p><a href="#probability-of-winter-survival">3. Probability of winter
+survival</a> (“calc_pSurvival”)</p>
+<p><a href="#puffin-chick-mortality-from-predation-due-to-hunger">4.
+Puffin chick mortality from predation due to hunger</a>
+(“calc_puffinmortality”)</p>
+<p><a href="#chick-mortality-as-a-result-of-other-causes">5. Chick
+mortality as a result of other causes</a> (“calc_othermortality”)</p>
+<p><a href="#chick-mortality-as-a-result-of-adults-not-attending-the-nest">6.
+Chick mortality as a result of adults not attending the nest</a>
+(“calc_unattendmortality”)</p>
+<p><a href="#parenting-the-chicks">7. Parenting the chicks</a>
+(“calc_chickcare”)</p>
+<p><a href="#calculate-the-time-taken-to-forage-required-amount">8.
+Calculate the time taken to forage required amount</a>
+(“calc_foragecapture”)</p>
+<p>[9. Calculate the foraging strategy for the timestep]
+(“calc_strategy)</p>
+<p>In the following chapters we describe with practical examples each of
+them.</p>
 <hr>
 <div class="section level2">
-<h2 id="body-mass-increase-for-adult-birds">Body mass increase for adult birds<a class="anchor" aria-label="anchor" href="#body-mass-increase-for-adult-birds"></a>
+<h2 id="body-mass-increase-for-adult-birds">1. Body mass increase for adult birds<a class="anchor" aria-label="anchor" href="#body-mass-increase-for-adult-birds"></a>
 </h2>
 <p><em>(calc_adultbmchage)</em></p>
 <div class="section level3">
@@ -173,9 +197,9 @@ in body mass if it has an intake between 0 and its full requirement of
 1248 kJ.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="va">BM_adult</span> <span class="op">&lt;-</span> <span class="fl">380</span></span>
-<span><span class="va">Ereq_adult</span> <span class="op">&lt;-</span> <span class="fl">1248</span> <span class="co">#kJ</span></span>
-<span><span class="va">adult_mass_KG</span> <span class="op">&lt;-</span> <span class="fl">38</span></span>
+<span><span class="va">BM_adult</span> <span class="op">&lt;-</span> <span class="fl">354.51</span></span>
+<span><span class="va">Ereq_adult</span> <span class="op">&lt;-</span> <span class="fl">1569.75</span> <span class="co">#kJ</span></span>
+<span><span class="va">adult_mass_KG</span> <span class="op">&lt;-</span> <span class="fl">38.5</span></span>
 <span><span class="va">Egain_adult</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="va">Ereq_adult</span><span class="op">)</span></span>
 <span>  </span>
 <span><span class="va">bodymass</span> <span class="op">&lt;-</span> </span>
@@ -206,7 +230,7 @@ lose 30g if it had no food.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="calculate-daily-energy-requirement">Calculate Daily Energy Requirement<a class="anchor" aria-label="anchor" href="#calculate-daily-energy-requirement"></a>
+<h2 id="calculate-daily-energy-requirement">2. Calculate Daily Energy Requirement<a class="anchor" aria-label="anchor" href="#calculate-daily-energy-requirement"></a>
 </h2>
 <p><em>(calc_adultdee)</em></p>
 <div class="section level3">
@@ -319,23 +343,23 @@ energy flying + energy foraging + energy at sea + energy warming
 <span>  </span>
 <span>  alive <span class="op">=</span> <span class="cn">TRUE</span>, <span class="co">#bird alive</span></span>
 <span>  </span>
-<span>  colony_h <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  flying_h <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  foraging_h <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>  at_sea_h <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  colony_h <span class="op">=</span> <span class="fl">18</span>,</span>
+<span>  flying_h <span class="op">=</span> <span class="fl">5.26</span>,</span>
+<span>  foraging_h <span class="op">=</span> <span class="fl">11.23</span>,</span>
+<span>  at_sea_h <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  </span>
-<span>  energy_nest <span class="op">=</span> <span class="fl">427.75</span>,</span>
-<span>  energy_flight <span class="op">=</span> <span class="fl">1400.74</span>,</span>
-<span>  energy_forage <span class="op">=</span> <span class="fl">1400.74</span>,</span>
-<span>  energy_searest <span class="op">=</span> <span class="fl">400.57</span>,</span>
-<span>  energy_warming <span class="op">=</span> <span class="fl">34.15</span>,</span>
+<span>  energy_nest <span class="op">=</span> <span class="fl">427.8</span>,</span>
+<span>  energy_flight <span class="op">=</span> <span class="fl">1400.7</span>,</span>
+<span>  energy_forage <span class="op">=</span> <span class="fl">1400.7</span>,</span>
+<span>  energy_searest <span class="op">=</span> <span class="fl">400.6</span>,</span>
+<span>  energy_warming <span class="op">=</span> <span class="fl">26</span>,</span>
 <span>  </span>
 <span>  assim_eff <span class="op">=</span> <span class="fl">0.74</span>,</span>
 <span>  daylength <span class="op">=</span> <span class="fl">36</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">Ereq_adult</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 855.3232</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 1231.338</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="example-2---the-bird-is-not-alive-1">
@@ -347,16 +371,16 @@ energy flying + energy foraging + energy at sea + energy warming
 <span>  </span>
 <span>  alive <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co">#bird not alive</span></span>
 <span>  </span>
-<span>  colony_h <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  flying_h <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  foraging_h <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>  at_sea_h <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  colony_h <span class="op">=</span> <span class="fl">18</span>,</span>
+<span>  flying_h <span class="op">=</span> <span class="fl">5.26</span>,</span>
+<span>  foraging_h <span class="op">=</span> <span class="fl">11.23</span>,</span>
+<span>  at_sea_h <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  </span>
-<span>  energy_nest <span class="op">=</span> <span class="fl">427.75</span>,</span>
-<span>  energy_flight <span class="op">=</span> <span class="fl">1400.74</span>,</span>
-<span>  energy_forage <span class="op">=</span> <span class="fl">1400.74</span>,</span>
-<span>  energy_searest <span class="op">=</span> <span class="fl">400.57</span>,</span>
-<span>  energy_warming <span class="op">=</span> <span class="fl">34.15</span>,</span>
+<span>  energy_nest <span class="op">=</span> <span class="fl">427.8</span>,</span>
+<span>  energy_flight <span class="op">=</span> <span class="fl">1400.7</span>,</span>
+<span>  energy_forage <span class="op">=</span> <span class="fl">1400.7</span>,</span>
+<span>  energy_searest <span class="op">=</span> <span class="fl">400.6</span>,</span>
+<span>  energy_warming <span class="op">=</span> <span class="fl">26</span>,</span>
 <span>  </span>
 <span>  assim_eff <span class="op">=</span> <span class="fl">0.74</span>,</span>
 <span>  daylength <span class="op">=</span> <span class="fl">36</span></span>
@@ -369,7 +393,7 @@ energy flying + energy foraging + energy at sea + energy warming
 </div>
 </div>
 <div class="section level2">
-<h2 id="probability-of-winter-survival">Probability of winter survival<a class="anchor" aria-label="anchor" href="#probability-of-winter-survival"></a>
+<h2 id="probability-of-winter-survival">3. Probability of winter survival<a class="anchor" aria-label="anchor" href="#probability-of-winter-survival"></a>
 </h2>
 <p><em>(calc_pSurvival)</em></p>
 <div class="section level3">
@@ -436,14 +460,14 @@ breeding season, standard deviation</li>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_pSurvival.html">calc_pSurvival</a></span><span class="op">(</span>sp <span class="op">=</span> <span class="st">"KI"</span>,</span>
-<span>                    bmi <span class="op">=</span> <span class="fl">345.9</span>,</span>
-<span>                    bm<span class="op">=</span> <span class="fl">370.8</span>,</span>
-<span>                    basesurv<span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>                    bmi <span class="op">=</span> <span class="fl">329.59</span>,</span>
+<span>                    bm<span class="op">=</span> <span class="fl">342.15</span>,</span>
+<span>                    basesurv<span class="op">=</span> <span class="fl">0.65</span>,</span>
 <span>                    beta <span class="op">=</span> <span class="fl">0.038</span></span>
 <span>                    <span class="op">)</span> <span class="co">#sd non-specified, so 0</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.6082815</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.5353806</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="example-2---guillemot">
@@ -451,19 +475,19 @@ breeding season, standard deviation</li>
 </h4>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_pSurvival.html">calc_pSurvival</a></span><span class="op">(</span>sp <span class="op">=</span> <span class="st">"GU"</span>, </span>
-<span>                     bmi <span class="op">=</span> <span class="fl">345.9</span>,</span>
-<span>                     bm <span class="op">=</span> <span class="fl">370.8</span>,</span>
-<span>                     basesurv <span class="op">=</span> <span class="fl">0.92</span>,</span>
-<span>                     beta <span class="op">=</span> <span class="fl">1.03</span>,</span>
-<span>                     sd <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span>                     bmi <span class="op">=</span> <span class="fl">340.37</span>,</span>
+<span>                     bm <span class="op">=</span> <span class="fl">344.49</span>,</span>
+<span>                     basesurv <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span>                     beta <span class="op">=</span> <span class="fl">0.038</span>,</span>
+<span>                     sd <span class="op">=</span> <span class="fl">34.41</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.8731838</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.799271</span></span></code></pre></div>
 <hr>
 </div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="puffin-chick-mortality-from-predation-due-to-hunger">Puffin chick mortality from predation due to hunger<a class="anchor" aria-label="anchor" href="#puffin-chick-mortality-from-predation-due-to-hunger"></a>
+<h2 id="puffin-chick-mortality-from-predation-due-to-hunger">4. Puffin chick mortality from predation due to hunger<a class="anchor" aria-label="anchor" href="#puffin-chick-mortality-from-predation-due-to-hunger"></a>
 </h2>
 <p><em>(calc_puffinmortality)</em></p>
 <div class="section level3">
@@ -546,8 +570,8 @@ of death) or it does (cod changes to “killed”.</p>
 <span><span class="co">#it doesn't die (unvaried cod)</span></span>
 <span><span class="va">new_CoD</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_puffinmortality.html">calc_puffinmortality</a></span><span class="op">(</span>CoD <span class="op">=</span> <span class="st">"none"</span>, <span class="co">#alive</span></span>
 <span>                                alive <span class="op">=</span> <span class="fl">1</span>, <span class="co">#alive</span></span>
-<span>                                BM_condition <span class="op">=</span> <span class="fl">0.5</span>, <span class="co">#hungry</span></span>
-<span>                                BM_Chick_mortf <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span>                                BM_condition <span class="op">=</span> <span class="fl">0.82</span>, <span class="co">#hungry</span></span>
+<span>                                BM_Chick_mortf <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">new_CoD</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "none"</span></span></code></pre></div>
@@ -572,7 +596,7 @@ unvaried.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">new_CoD</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_puffinmortality.html">calc_puffinmortality</a></span><span class="op">(</span>CoD <span class="op">=</span> <span class="st">"starved"</span>, <span class="co">#already dead</span></span>
 <span>                                alive <span class="op">=</span> <span class="fl">0</span>, <span class="co">#dead</span></span>
-<span>                                BM_condition <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                                BM_condition <span class="op">=</span> <span class="fl">0.99</span>,</span>
 <span>                                BM_Chick_mortf <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">new_CoD</span><span class="op">)</span></span>
@@ -582,7 +606,7 @@ unvaried.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="chick-mortality-as-a-result-of-other-causes">Chick mortality as a result of other causes<a class="anchor" aria-label="anchor" href="#chick-mortality-as-a-result-of-other-causes"></a>
+<h2 id="chick-mortality-as-a-result-of-other-causes">5. Chick mortality as a result of other causes<a class="anchor" aria-label="anchor" href="#chick-mortality-as-a-result-of-other-causes"></a>
 </h2>
 <p><em>(calc_othermortality)</em></p>
 <div class="section level3">
@@ -664,7 +688,7 @@ breeding season</li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="chick-mortality-as-a-result-of-adults-not-attending-the-nest">Chick mortality as a result of adults not attending the nest<a class="anchor" aria-label="anchor" href="#chick-mortality-as-a-result-of-adults-not-attending-the-nest"></a>
+<h2 id="chick-mortality-as-a-result-of-adults-not-attending-the-nest">6. Chick mortality as a result of adults not attending the nest<a class="anchor" aria-label="anchor" href="#chick-mortality-as-a-result-of-adults-not-attending-the-nest"></a>
 </h2>
 <p><em>(calc_unattendmortality)</em></p>
 <div class="section level3">
@@ -726,7 +750,7 @@ hours<a class="anchor" aria-label="anchor" href="#example-1---chick-is-alive-wit
 <code class="sourceCode R"><span><span class="va">new_CoD</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_unattendmortality.html">calc_unattendmortality</a></span><span class="op">(</span>CoD <span class="op">=</span> <span class="st">"none"</span>, <span class="co">#alive</span></span>
 <span>                                  alive <span class="op">=</span> <span class="fl">1</span>, <span class="co">#alive</span></span>
 <span>                                  unattend_hrs <span class="op">=</span> <span class="fl">0</span>, <span class="co">#no attended hours</span></span>
-<span>                                  max_hrs <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span>                                  max_hrs <span class="op">=</span> <span class="fl">18</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">new_CoD</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "none"</span></span></code></pre></div>
@@ -743,13 +767,13 @@ draw</p>
 <span>                      <span class="fu"><a href="../reference/calc_unattendmortality.html">calc_unattendmortality</a></span><span class="op">(</span>CoD <span class="op">=</span> <span class="st">"none"</span>, <span class="co">#alive</span></span>
 <span>                                   alive <span class="op">=</span> <span class="fl">1</span>, <span class="co">#alive</span></span>
 <span>                                   unattend_hrs <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>                                   max_hrs <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span>                                   max_hrs <span class="op">=</span> <span class="fl">18</span><span class="op">)</span></span>
 <span>                      <span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">new_CoD</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; new_CoD</span></span>
 <span><span class="co">#&gt;       none unattended </span></span>
-<span><span class="co">#&gt;        487        513</span></span></code></pre></div>
+<span><span class="co">#&gt;        658        342</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="example-3---chick-is-alive-unattended-hours-to-critical-threshold">
@@ -801,7 +825,7 @@ critical threshold<a class="anchor" aria-label="anchor" href="#example-4---chick
 </div>
 </div>
 <div class="section level2">
-<h2 id="parenting-the-chicks">Parenting the chicks<a class="anchor" aria-label="anchor" href="#parenting-the-chicks"></a>
+<h2 id="parenting-the-chicks">7. Parenting the chicks<a class="anchor" aria-label="anchor" href="#parenting-the-chicks"></a>
 </h2>
 <p><em>(calc_chickcare)</em></p>
 <div class="section level3">
@@ -932,15 +956,33 @@ daylength, BM_Chick_mortf and chick_mass_a)</li>
 <h3 id="practical-examples-6">Practical examples<a class="anchor" aria-label="anchor" href="#practical-examples-6"></a>
 </h3>
 <div class="section level4">
-<h4 id="example-1--">
-<strong>Example 1 -</strong><a class="anchor" aria-label="anchor" href="#example-1--"></a>
+<h4 id="example-1">
+<strong>Example 1</strong><a class="anchor" aria-label="anchor" href="#example-1"></a>
 </h4>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">parent</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>BirdID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>                                 PairID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                 feeding_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                                 Ereq_intakef_c <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.77</span>, <span class="fl">0.73</span>, <span class="fl">0.87</span>,  <span class="fl">0.62</span><span class="op">)</span>,</span>
+<span>                                 colony_h <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">18</span>, <span class="fl">19</span>, <span class="fl">18</span><span class="op">)</span>,</span>
+<span>                                 MF <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"M"</span>, <span class="st">"F"</span>, <span class="st">"M"</span>, <span class="st">"F"</span><span class="op">)</span></span>
+<span>                                 <span class="op">)</span></span>
+<span></span>
+<span><span class="va">Opt_BM_chick</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>timestep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span>,</span>
+<span>                           Opt_BM_chick <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36</span>, <span class="fl">47</span>, <span class="fl">58</span>, <span class="fl">69</span>, <span class="fl">80</span>, <span class="fl">91</span>, <span class="fl">102</span>, <span class="fl">113</span>, <span class="fl">124</span>, <span class="fl">135</span>, <span class="fl">146</span>, <span class="fl">157</span>, <span class="fl">168</span>, <span class="fl">179</span>, <span class="fl">190</span>, <span class="fl">201</span>, <span class="fl">212</span>, <span class="fl">223</span>, <span class="fl">234</span>, <span class="fl">245</span>, <span class="fl">256</span>, <span class="fl">267</span>, <span class="fl">278</span>, <span class="fl">289</span>, <span class="fl">300</span>, <span class="fl">311</span>, <span class="fl">322</span>, <span class="fl">333</span>, <span class="fl">344</span>, <span class="fl">355</span>, <span class="fl">366</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="../reference/calc_chickcare.html">calc_chickcare</a></span><span class="op">(</span>parent <span class="op">=</span> <span class="va">parent</span>,</span>
+<span>                 ChickState <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                 Opt_BM_chick <span class="op">=</span> ,</span>
+<span>                 <span class="va">Species</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="calculate-the-time-taken-to-forage-required-amount">Calculate the time taken to forage required amount<a class="anchor" aria-label="anchor" href="#calculate-the-time-taken-to-forage-required-amount"></a>
+<h2 id="calculate-the-time-taken-to-forage-required-amount">8. Calculate the time taken to forage required amount<a class="anchor" aria-label="anchor" href="#calculate-the-time-taken-to-forage-required-amount"></a>
 </h2>
 <p><em>calc_foragecapture</em></p>
 <div class="section level3">
@@ -989,7 +1031,7 @@ kg/km2</li>
 <div class="section level3">
 <h3 id="the-function-7">The function<a class="anchor" aria-label="anchor" href="#the-function-7"></a>
 </h3>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">calc_foragecapture</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x0</span>, <span class="va">h</span>, <span class="va">a</span>, <span class="va">maxt</span><span class="op">)</span><span class="op">{</span></span>
 <span></span>
 <span>  <span class="co"># The function to solve</span></span>
@@ -1033,41 +1075,42 @@ kg/km2</li>
 <h3 id="practical-examples-7">Practical examples<a class="anchor" aria-label="anchor" href="#practical-examples-7"></a>
 </h3>
 <div class="section level4">
-<h4 id="example-1">
-<strong>Example 1</strong><a class="anchor" aria-label="anchor" href="#example-1"></a>
-</h4>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x0</span> <span class="op">&lt;-</span> <span class="fl">201</span></span>
-<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fl">700</span></span>
-<span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
-<span><span class="va">maxt</span> <span class="op">&lt;-</span> <span class="fl">2160</span></span>
-<span></span>
-<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_foragecapture.html">calc_foragecapture</a></span><span class="op">(</span><span class="va">x0</span>, <span class="va">h</span>, <span class="va">a</span>, <span class="va">maxt</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">tmin</span>, <span class="va">out</span><span class="op">$</span><span class="va">captured_g</span><span class="op">)</span></span></code></pre></div>
-<p><img src="I_main_functions_files/figure-html/unnamed-chunk-29-1.png" width="700"></p>
-</div>
-<div class="section level4">
-<h4 id="example-2">
-<strong>Example 2</strong><a class="anchor" aria-label="anchor" href="#example-2"></a>
+<h4 id="example-1-1">
+<strong>Example 1</strong><a class="anchor" aria-label="anchor" href="#example-1-1"></a>
 </h4>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x0</span> <span class="op">&lt;-</span> <span class="fl">201</span></span>
-<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fl">977</span></span>
-<span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">4.37</span></span>
+<code class="sourceCode R"><span><span class="va">x0</span> <span class="op">&lt;-</span> <span class="fl">260</span></span>
+<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fl">973</span></span>
+<span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">4.369</span></span>
 <span><span class="va">maxt</span> <span class="op">&lt;-</span> <span class="fl">2160</span></span>
 <span></span>
 <span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_foragecapture.html">calc_foragecapture</a></span><span class="op">(</span><span class="va">x0</span>, <span class="va">h</span>, <span class="va">a</span>, <span class="va">maxt</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">tmin</span>, <span class="va">out</span><span class="op">$</span><span class="va">captured_g</span><span class="op">)</span></span></code></pre></div>
 <p><img src="I_main_functions_files/figure-html/unnamed-chunk-30-1.png" width="700"></p>
+</div>
+<div class="section level4">
+<h4 id="example-2">
+<strong>Example 2</strong><a class="anchor" aria-label="anchor" href="#example-2"></a>
+</h4>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x0</span> <span class="op">&lt;-</span> <span class="fl">50</span></span>
+<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fl">939</span></span>
+<span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">4.1</span></span>
+<span><span class="va">maxt</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span>
+<span></span>
+<span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calc_foragecapture.html">calc_foragecapture</a></span><span class="op">(</span><span class="va">x0</span>, <span class="va">h</span>, <span class="va">a</span>, <span class="va">maxt</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">tmin</span>, <span class="va">out</span><span class="op">$</span><span class="va">captured_g</span><span class="op">)</span></span></code></pre></div>
+<p><img src="I_main_functions_files/figure-html/unnamed-chunk-31-1.png" width="700"></p>
 <hr>
 </div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="calculate-the-foraging-strategy-for-the-timestep">
-<strong>Calculate the foraging strategy for the
+<strong>9. Calculate the foraging strategy for the
 timestep</strong><a class="anchor" aria-label="anchor" href="#calculate-the-foraging-strategy-for-the-timestep"></a>
 </h2>
 <p>(<em>calc_strategy</em>)</p>

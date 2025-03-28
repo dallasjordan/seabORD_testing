@@ -359,4 +359,27 @@
 #' @source NEED EXPL
 "ORDpoly_example_wfold"
 
+#' DBS_map_example.R
+#'
+#' NEED EXPL
+#'
+#' @format list of "raster" with the values of a raster in a matrix; and "metadata" with the extent and resolution to build back the raster in memory.
+#' \describe{
+#'   \item{matrix}{matrix of pixel values}
+#'   \item{metadata}{List of metadata: extent, resolution, and CRS.}
+#' }
+#' @source Generated from "DBS_map.tif".
+"DBS_map_example"
+
+#' DBS_withORDs_example.R
+#'
+#' NEED EXPL
+#'
+#' @format list of "raster" with the values of a raster in a matrix; and "metadata" with the extent and resolution to build back the raster in memory.
+#' \describe{
+#'   \item{matrix}{matrix of pixel values}
+#'   \item{metadata}{List of metadata: extent, resolution, and CRS.}
+#' }
+#' @source Generated from "DBS_withORDs.tif".
+"DBS_withORDs_example"
 

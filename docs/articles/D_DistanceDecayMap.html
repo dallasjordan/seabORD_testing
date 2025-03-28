@@ -137,40 +137,40 @@ map</li>
 <p>Load the data into environment:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="co"># library(magrittr)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Load in the sea mask of the UK (shows which cells are on land and sea)</span></span>
-<span><span class="co"># example_data_seamask &lt;- seabORD::seamask_3035_example</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># #make a raster with the right dimension/proj/extents etc.</span></span>
-<span><span class="co"># seamask_example &lt;- </span></span>
-<span><span class="co">#   raster::raster(</span></span>
-<span><span class="co">#     nrows = example_data_seamask$metadata[["n_rows"]],</span></span>
-<span><span class="co">#     ncols = example_data_seamask$metadata[["n_cols"]],</span></span>
-<span><span class="co">#     xmn = example_data_seamask$metadata[["x_min"]],</span></span>
-<span><span class="co">#     xmx = example_data_seamask$metadata[["x_max"]],</span></span>
-<span><span class="co">#     ymn = example_data_seamask$metadata[["y_min"]],</span></span>
-<span><span class="co">#     ymx = example_data_seamask$metadata[["y_max"]],</span></span>
-<span><span class="co">#     crs = example_data_seamask$metadata[["crs"]]</span></span>
-<span><span class="co"># )</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># #fill it with the data available</span></span>
-<span><span class="co"># searast &lt;- raster::setValues(seamask_example, #the raster</span></span>
-<span><span class="co">#                                      example_data_seamask$matrix) #the values</span></span>
-<span><span class="co"># #Set the name of the layer</span></span>
-<span><span class="co"># names(searast) &lt;- "seamask_3035"</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Load in the UK coastline for plotting later:</span></span>
-<span><span class="co"># coastline &lt;- seabORD::cef_coast_3035</span></span>
-<span><span class="co"># UK_coastline &lt;- dplyr::filter(coastline, COUNTRY == "United Kingdom")</span></span>
-<span><span class="co"># UK_coastline_LAEA &lt;- sf::st_transform(UK_coastline, crs= "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs" )</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Load in the wind farm polygons. In this case it is a shapefile containing the three wind farms closest to Whinnyfold (Hywind, Aberdeen Bay, Kincardine). You could upload any shapefiles you want - just ensure you transform them to the same coordinate reference system (EPSG:3035) and they are formatted in a similar fashion to the example.</span></span>
-<span><span class="co"># ORDpolys &lt;- seabORD::ORDpoly_example_wfold</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Load the flight gird correction layer as geographic correction is necessary for gdistance calculations of the class Transition as they are made with &gt;4 directions in our instance. This correction layer has been pre-calculated and covers the full map we are using. </span></span>
-<span><span class="co"># FlightGridcorrection_3035 &lt;- seabORD::FlightGridcorrection_3035</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Load in the sea mask of the UK (shows which cells are on land and sea)</span></span>
+<span><span class="va">example_data_seamask</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/seamask_3035_example.html">seamask_3035_example</a></span></span>
+<span></span>
+<span><span class="co">#make a raster with the right dimension/proj/extents etc.</span></span>
+<span><span class="va">seamask_example</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>    nrows <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ncols <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmn <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmx <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymn <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymx <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    crs <span class="op">=</span> <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#fill it with the data available</span></span>
+<span><span class="va">searast</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">seamask_example</span>, <span class="co">#the raster</span></span>
+<span>                                     <span class="va">example_data_seamask</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span> <span class="co">#the values</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">searast</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"seamask_3035"</span></span>
+<span></span>
+<span><span class="co"># Load in the UK coastline for plotting later:</span></span>
+<span><span class="va">coastline</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/cef_coast_3035.html">cef_coast_3035</a></span></span>
+<span><span class="va">UK_coastline</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">coastline</span>, <span class="va">COUNTRY</span> <span class="op">==</span> <span class="st">"United Kingdom"</span><span class="op">)</span></span>
+<span><span class="va">UK_coastline_LAEA</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_transform</a></span><span class="op">(</span><span class="va">UK_coastline</span>, crs<span class="op">=</span> <span class="st">"+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs"</span> <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Load in the wind farm polygons. In this case it is a shapefile containing the three wind farms closest to Whinnyfold (Hywind, Aberdeen Bay, Kincardine). You could upload any shapefiles you want - just ensure you transform them to the same coordinate reference system (EPSG:3035) and they are formatted in a similar fashion to the example.</span></span>
+<span><span class="va">ORDpolys</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/ORDpoly_example_wfold.html">ORDpoly_example_wfold</a></span></span>
+<span></span>
+<span></span>
+<span><span class="co"># Load the flight gird correction layer as geographic correction is necessary for gdistance calculations of the class Transition as they are made with &gt;4 directions in our instance. This correction layer has been pre-calculated and covers the full map we are using.</span></span>
+<span><span class="va">FlightGridcorrection_3035</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/FlightGridcorrection_3035.html">FlightGridcorrection_3035</a></span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="distance-by-sea-map">2. Distance by sea map<a class="anchor" aria-label="anchor" href="#distance-by-sea-map"></a>
@@ -183,22 +183,24 @@ set location is on land. It needs to be placed beside or on the sea
 cells so it is not completely obstructed by land cells which are defined
 as impassable. We recommend checking this with a plot.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Set the location of our colony at Whinnyfold and transform it to LAEA projection:</span></span>
-<span><span class="co"># colony &lt;- sf::st_as_sf(data.frame(lon = -1.85849, lat = 57.388807),</span></span>
-<span><span class="co">#                        coords = c("lon", "lat"), crs = 4326)</span></span>
-<span><span class="co"># colonyLAEA &lt;- sf::st_transform(colony, crs = "EPSG:3035")  # Convert to LAEA Europe</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # check the colony location is beside sea cells:</span></span>
-<span><span class="co"># expand_km &lt;- 1 # how far to expand the plot in km on either side of the colony</span></span>
-<span><span class="co"># ggplot2::ggplot() +</span></span>
-<span><span class="co">#   ggplot2::geom_sf(data=UK_coastline_LAEA, fill = "grey", colour="black") +  # coastline</span></span>
-<span><span class="co">#   ggplot2::geom_sf(data=colonyLAEA, colour="blue", pch=4, size =4)+          # colony</span></span>
-<span><span class="co">#   ggplot2::coord_sf(                                                         # </span></span>
-<span><span class="co">#     xlim=c(sf::st_coordinates(colonyLAEA)[,1] - (expand_km*1000), sf::st_coordinates(colonyLAEA)[,1] + (expand_km*1000)),</span></span>
-<span><span class="co">#     ylim=c(sf::st_coordinates(colonyLAEA)[,2] - (expand_km*1000), sf::st_coordinates(colonyLAEA)[,2] + (expand_km*1000)), expand = FALSE) +</span></span>
-<span><span class="co">#   ggspatial::annotation_scale(location = "tr", width_hint = 0.5)</span></span>
-<span><span class="co"># # from this plot we can see that the location is not on the land polygon, so we can proceed with peace of mind. </span></span>
-<span><span class="co"># </span></span>
+<code class="sourceCode R"><span><span class="co">#Set the location of our colony at Whinnyfold and transform it to LAEA projection:</span></span>
+<span><span class="va">colony</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="op">-</span><span class="fl">1.85849</span>, lat <span class="op">=</span> <span class="fl">57.388807</span><span class="op">)</span>,</span>
+<span>                       coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span></span>
+<span><span class="va">colonyLAEA</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_transform</a></span><span class="op">(</span><span class="va">colony</span>, crs <span class="op">=</span> <span class="st">"EPSG:3035"</span><span class="op">)</span>  <span class="co"># Convert to LAEA Europe</span></span>
+<span></span>
+<span><span class="co"># check the colony location is beside sea cells:</span></span>
+<span><span class="va">expand_km</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="co"># how far to expand the plot in km on either side of the colony</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">UK_coastline_LAEA</span>, fill <span class="op">=</span> <span class="st">"grey"</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span>  <span class="co"># coastline</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">colonyLAEA</span>, colour<span class="op">=</span><span class="st">"blue"</span>, pch<span class="op">=</span><span class="fl">4</span>, size <span class="op">=</span><span class="fl">4</span><span class="op">)</span><span class="op">+</span>          <span class="co"># colony</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">coord_sf</a></span><span class="op">(</span>                                                         <span class="co">#</span></span>
+<span>    xlim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_coordinates.html" class="external-link">st_coordinates</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="op">(</span><span class="va">expand_km</span><span class="op">*</span><span class="fl">1000</span><span class="op">)</span>, <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_coordinates.html" class="external-link">st_coordinates</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="op">(</span><span class="va">expand_km</span><span class="op">*</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_coordinates.html" class="external-link">st_coordinates</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">-</span> <span class="op">(</span><span class="va">expand_km</span><span class="op">*</span><span class="fl">1000</span><span class="op">)</span>, <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_coordinates.html" class="external-link">st_coordinates</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="op">(</span><span class="va">expand_km</span><span class="op">*</span><span class="fl">1000</span><span class="op">)</span><span class="op">)</span>, expand <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggspatial</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/ggspatial/reference/annotation_scale.html" class="external-link">annotation_scale</a></span><span class="op">(</span>location <span class="op">=</span> <span class="st">"tr"</span>, width_hint <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<p><img src="D_DistanceDecayMap_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># from this plot we can see that the location is not on the land polygon, so we can proceed with peace of mind.</span></span>
+<span></span>
 <span><span class="co"># # Create you distance by sea map using the function calc_dist_restricted</span></span>
 <span><span class="co"># DBS_map &lt;- seabORD::calc_dist_restricted(mymap=searast,</span></span>
 <span><span class="co">#                                   obspolys=NULL,               # not including ORDs this time</span></span>
@@ -206,8 +208,31 @@ as impassable. We recommend checking this with a plot.</p>
 <span><span class="co">#                                   FlightGridcorrection_3035 = FlightGridcorrection_3035,</span></span>
 <span><span class="co">#                                   directions=16, obspenalty=1e+08,</span></span>
 <span><span class="co">#                                   maxdist=300)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># terra::plot(DBS_map)</span></span></code></pre></div>
+<span><span class="co">#~~~~~~~~~~~~</span></span>
+<span><span class="co"># Load the example as it takes a long time to run:</span></span>
+<span><span class="va">example_data_DBS_map</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/DBS_map_example.html">DBS_map_example</a></span></span>
+<span></span>
+<span><span class="co">#make a raster with the right dimension/proj/extents etc.</span></span>
+<span><span class="va">DBS_map_example_structure</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>    nrows <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ncols <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmn <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmx <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymn <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymx <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    crs <span class="op">=</span> <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#fill it with the data available</span></span>
+<span><span class="va">DBS_map</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">DBS_map_example_structure</span>, <span class="co">#the raster</span></span>
+<span>                                     <span class="va">example_data_DBS_map</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span> <span class="co">#the values</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">DBS_map</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"DBS_map"</span></span>
+<span><span class="co">#~~~~~~~~~~~~</span></span>
+<span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">DBS_map</span><span class="op">)</span></span></code></pre></div>
+<p><img src="D_DistanceDecayMap_files/figure-html/unnamed-chunk-3-2.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="distance-decay-map">3. Distance decay map<a class="anchor" aria-label="anchor" href="#distance-decay-map"></a>
@@ -228,65 +253,71 @@ distribution) lies</li>
 </ol>
 <p>The function then returns a raster containing the distance-decay
 map.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># # Set your parameter inputs for distance decay map function:</span></span>
-<span><span class="co"># dmap &lt;- DBS_map</span></span>
-<span><span class="co"># fr &lt;- 150 # set as something sensible for this speces</span></span>
-<span><span class="co"># pinhalf &lt;- 0.95 # value between 0 and 1</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # run function:</span></span>
-<span><span class="co"># DD_map &lt;- seabORD::calc_birddensmap_dd_pinhalf(dmap, fr, pinhalf)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # plot to view:</span></span>
-<span><span class="co"># terra::plot(DD_map)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # cropped plot:</span></span>
-<span><span class="co"># km_to_left  &lt;- 30</span></span>
-<span><span class="co"># km_to_right &lt;-  50</span></span>
-<span><span class="co"># km_up &lt;- 30</span></span>
-<span><span class="co"># km_down &lt;- 70</span></span>
-<span><span class="co"># crop_extent_raster &lt;- raster::extent(sf::st_bbox(colonyLAEA)$xmin - (km_to_left * 1000),</span></span>
-<span><span class="co">#                                         sf::st_bbox(colonyLAEA)$xmin + (km_to_right * 1000),</span></span>
-<span><span class="co">#                                         sf::st_bbox(colonyLAEA)$ymin - (km_down * 1000),</span></span>
-<span><span class="co">#                                         sf::st_bbox(colonyLAEA)$ymin + (km_up * 1000))</span></span>
-<span><span class="co"># DD_map_cropped &lt;- raster::crop(DD_map, crop_extent_raster)</span></span>
-<span><span class="co"># terra::plot(DD_map_cropped)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Set your parameter inputs for distance decay map function:</span></span>
+<span><span class="va">dmap</span> <span class="op">&lt;-</span> <span class="va">DBS_map</span></span>
+<span><span class="va">fr</span> <span class="op">&lt;-</span> <span class="fl">150</span> <span class="co"># set as something sensible for this speces</span></span>
+<span><span class="va">pinhalf</span> <span class="op">&lt;-</span> <span class="fl">0.95</span> <span class="co"># value between 0 and 1</span></span>
+<span></span>
+<span><span class="co"># run function:</span></span>
+<span><span class="va">DD_map</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="fu"><a href="../reference/calc_birddensmap_dd_pinhalf.html">calc_birddensmap_dd_pinhalf</a></span><span class="op">(</span><span class="va">dmap</span>, <span class="va">fr</span>, <span class="va">pinhalf</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># plot to view:</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">DD_map</span><span class="op">)</span></span></code></pre></div>
+<p><img src="D_DistanceDecayMap_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># cropped plot:</span></span>
+<span><span class="va">km_to_left</span>  <span class="op">&lt;-</span> <span class="fl">30</span></span>
+<span><span class="va">km_to_right</span> <span class="op">&lt;-</span>  <span class="fl">50</span></span>
+<span><span class="va">km_up</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
+<span><span class="va">km_down</span> <span class="op">&lt;-</span> <span class="fl">70</span></span>
+<span><span class="va">crop_extent_raster</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">$</span><span class="va">xmin</span> <span class="op">-</span> <span class="op">(</span><span class="va">km_to_left</span> <span class="op">*</span> <span class="fl">1000</span><span class="op">)</span>,</span>
+<span>                                        <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">$</span><span class="va">xmin</span> <span class="op">+</span> <span class="op">(</span><span class="va">km_to_right</span> <span class="op">*</span> <span class="fl">1000</span><span class="op">)</span>,</span>
+<span>                                        <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">$</span><span class="va">ymin</span> <span class="op">-</span> <span class="op">(</span><span class="va">km_down</span> <span class="op">*</span> <span class="fl">1000</span><span class="op">)</span>,</span>
+<span>                                        <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="va">colonyLAEA</span><span class="op">)</span><span class="op">$</span><span class="va">ymin</span> <span class="op">+</span> <span class="op">(</span><span class="va">km_up</span> <span class="op">*</span> <span class="fl">1000</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">DD_map_cropped</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">DD_map</span>, <span class="va">crop_extent_raster</span><span class="op">)</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">DD_map_cropped</span><span class="op">)</span></span></code></pre></div>
+<p><img src="D_DistanceDecayMap_files/figure-html/unnamed-chunk-4-2.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="plotting">4. Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a>
 </h3>
 <p>Now that we have made the density decay map, let’s plot it with the
 ORD footprints to check that they overlap.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># # create a dataframe of your ddmap as ggplot requires it in this format:</span></span>
-<span><span class="co"># DD_map_cropped_df &lt;- terra::as.data.frame(DD_map_cropped, xy=TRUE)  # Converts to x, y, value</span></span>
-<span><span class="co"># colnames(DD_map_cropped_df) &lt;- c("x", "y", "density")</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # Add a 2km buffer to the ORD footprint and reformat</span></span>
-<span><span class="co"># bufferwidth &lt;- 2</span></span>
-<span><span class="co"># ORDpolys_with_buffer_1 &lt;- sf::st_buffer(ORDpolys, bufferwidth * 1000)</span></span>
-<span><span class="co"># ORDpolys_with_buffer &lt;- ORDpolys_with_buffer_1 %&gt;%</span></span>
-<span><span class="co">#   sf::st_cast("POLYGON") %&gt;%               # Convert to individual polygons</span></span>
-<span><span class="co">#   dplyr::mutate(names = paste0("ord", dplyr::row_number())) %&gt;%  </span></span>
-<span><span class="co">#   dplyr::rename(x = geometry)  </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # crop the UK coastline to the extent set above to reduce plot rendering time </span></span>
-<span><span class="co"># UK_coastline_cropped &lt;- sf::st_crop(UK_coastline_LAEA, crop_extent_raster)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # plot everything together:</span></span>
-<span><span class="co"># ggplot2::ggplot() +</span></span>
-<span><span class="co">#     ggplot2::geom_raster(data=DD_map_cropped_df, ggplot2::aes(x=x,y=y, fill=density)) +</span></span>
-<span><span class="co">#     ggplot2::scale_fill_viridis_c(option = "B", direction = -1,</span></span>
-<span><span class="co">#                          # begin = 0,</span></span>
-<span><span class="co">#                          # end = 1,</span></span>
-<span><span class="co">#                          na.value = "transparent") +</span></span>
-<span><span class="co">#     ggplot2::geom_sf(data=ORDpolys, colour="blue", fill=NA) +</span></span>
-<span><span class="co">#     ggplot2::geom_sf(data=ORDpolys_with_buffer, colour="lightblue", fill=NA) +</span></span>
-<span><span class="co">#     ggplot2::geom_sf(data=UK_coastline_cropped, fill = "grey", colour="black") +</span></span>
-<span><span class="co">#     ggplot2::coord_sf(</span></span>
-<span><span class="co">#         xlim=c(crop_extent_raster[1] , crop_extent_raster[2]),</span></span>
-<span><span class="co">#         ylim=c(crop_extent_raster[3], crop_extent_raster[4]), expand = FALSE) +</span></span>
-<span><span class="co">#     ggspatial::annotation_scale(location = "tr", width_hint = 0.5)</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># create a dataframe of your ddmap as ggplot requires it in this format:</span></span>
+<span><span class="va">DD_map_cropped_df</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">DD_map_cropped</span>, xy<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># Converts to x, y, value</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">DD_map_cropped_df</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span>, <span class="st">"density"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add a 2km buffer to the ORD footprint and reformat</span></span>
+<span><span class="va">bufferwidth</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span><span class="va">ORDpolys_with_buffer_1</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="va">ORDpolys</span>, <span class="va">bufferwidth</span> <span class="op">*</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">ORDpolys_with_buffer</span> <span class="op">&lt;-</span> <span class="va">ORDpolys_with_buffer_1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_cast.html" class="external-link">st_cast</a></span><span class="op">(</span><span class="st">"POLYGON"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>               <span class="co"># Convert to individual polygons</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ord"</span>, <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/row_number.html" class="external-link">row_number</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">geometry</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># crop the UK coastline to the extent set above to reduce plot rendering time</span></span>
+<span><span class="va">UK_coastline_cropped</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crop.html" class="external-link">st_crop</a></span><span class="op">(</span><span class="va">UK_coastline_LAEA</span>, <span class="va">crop_extent_raster</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: attribute variables are assumed to be spatially constant throughout</span></span>
+<span><span class="co">#&gt; all geometries</span></span>
+<span></span>
+<span><span class="co"># plot everything together:</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">DD_map_cropped_df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">x</span>,y<span class="op">=</span><span class="va">y</span>, fill<span class="op">=</span><span class="va">density</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"B"</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
+<span>                         <span class="co"># begin = 0,</span></span>
+<span>                         <span class="co"># end = 1,</span></span>
+<span>                         na.value <span class="op">=</span> <span class="st">"transparent"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">ORDpolys</span>, colour<span class="op">=</span><span class="st">"blue"</span>, fill<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">ORDpolys_with_buffer</span>, colour<span class="op">=</span><span class="st">"lightblue"</span>, fill<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>data<span class="op">=</span><span class="va">UK_coastline_cropped</span>, fill <span class="op">=</span> <span class="st">"grey"</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">coord_sf</a></span><span class="op">(</span></span>
+<span>        xlim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">crop_extent_raster</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> , <span class="va">crop_extent_raster</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>        ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">crop_extent_raster</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="va">crop_extent_raster</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span><span class="op">)</span>, expand <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggspatial</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/ggspatial/reference/annotation_scale.html" class="external-link">annotation_scale</a></span><span class="op">(</span>location <span class="op">=</span> <span class="st">"tr"</span>, width_hint <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<p><img src="D_DistanceDecayMap_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="interaction-assessment">5. Interaction assessment<a class="anchor" aria-label="anchor" href="#interaction-assessment"></a>
@@ -302,35 +333,62 @@ per time step. This can be used to estimate the number of birds being
 displaced per time step by multiplying the proportion of the simulated
 bird distribution map (utilisation distribution) within the polygon
 (plus buffer) by the displacement rate and by the colony size.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># </span></span>
-<span><span class="co"># # First lets do a quick assessment of the percentage of the density decay map being occupied by the ORDs and their buffers.</span></span>
-<span><span class="co"># maskedmap &lt;- raster::mask(DD_map, ORDpolys_with_buffer)</span></span>
-<span><span class="co"># raster::cellStats(maskedmap, stat = "sum") </span></span>
-<span><span class="co"># # this tells us that just over 1% of the normalised raster is being occupied by ORDs in this case.</span></span>
-<span><span class="co"># </span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># First lets do a quick assessment of the percentage of the density decay map being occupied by the ORDs and their buffers.</span></span>
+<span><span class="va">maskedmap</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">mask</a></span><span class="op">(</span><span class="va">DD_map</span>, <span class="va">ORDpolys_with_buffer</span><span class="op">)</span></span>
+<span><span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/cellStats.html" class="external-link">cellStats</a></span><span class="op">(</span><span class="va">maskedmap</span>, stat <span class="op">=</span> <span class="st">"sum"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.01156287</span></span>
+<span><span class="co"># this tells us that just over 1% of the normalised raster is being occupied by ORDs in this case.</span></span>
+<span></span>
 <span><span class="co"># # Run function with obstruction from ORDs:</span></span>
 <span><span class="co"># DBS_withORDs &lt;- seabORD::calc_dist_restricted (</span></span>
-<span><span class="co">#     mymap = searast, </span></span>
+<span><span class="co">#     mymap = searast,</span></span>
 <span><span class="co">#     obspolys = ORDpolys_with_buffer,</span></span>
-<span><span class="co">#     targetcoords = colonyLAEA, </span></span>
-<span><span class="co">#     FlightGridcorrection_3035 = FlightGridcorrection_3035, </span></span>
+<span><span class="co">#     targetcoords = colonyLAEA,</span></span>
+<span><span class="co">#     FlightGridcorrection_3035 = FlightGridcorrection_3035,</span></span>
 <span><span class="co">#     directions = 16,</span></span>
 <span><span class="co">#     obspenalty = 1e+08, maxdist = 300)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # "smalltol" is a threshold set to remove biologically implausible. E.g., 0.1 implies a distance of 100m which isn't overly important, so we recommend this as a minmum</span></span>
-<span><span class="co"># smalltol &lt;- 0.01</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # create a layer which is the difference between with and without ORDs:</span></span>
-<span><span class="co"># obstructed &lt;- ((DBS_withORDs - DBS_map) &gt; smalltol)</span></span>
-<span><span class="co"># obstructed_cropped &lt;- raster::crop(obstructed, crop_extent_raster)</span></span>
-<span><span class="co"># terra::plot(obstructed_cropped)</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># # calculate percentage in ORD and buffer, and the percentage in the "shadow"/barriered area:</span></span>
-<span><span class="co"># out &lt;- data.frame(</span></span>
-<span><span class="co">#     pc_in_ORD_plus_buffer = 100 * sum(unlist(raster::extract(DD_map, ORDpolys_with_buffer)), na.rm=T),</span></span>
-<span><span class="co">#     pc_in_ORD_shadow = 100 * sum(DD_map[(DBS_withORDs - DBS_map) &gt; smalltol], na.rm=T))</span></span>
-<span><span class="co"># out</span></span></code></pre></div>
+<span><span class="co">#~~~~~~~~~~~~</span></span>
+<span><span class="co"># Load the example as it takes a long time to run:</span></span>
+<span><span class="va">example_data_DBS_withORDs</span> <span class="op">&lt;-</span> <span class="fu">seabORD</span><span class="fu">::</span><span class="va"><a href="../reference/DBS_withORDs_example.html">DBS_withORDs_example</a></span></span>
+<span></span>
+<span><span class="co">#make a raster with the right dimension/proj/extents etc.</span></span>
+<span><span class="va">DBS_withORDs_example_structure</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span></span>
+<span>    nrows <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_rows"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ncols <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"n_cols"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmn <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    xmx <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"x_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymn <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_min"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    ymx <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"y_max"</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>    crs <span class="op">=</span> <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">metadata</span><span class="op">[[</span><span class="st">"crs"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#fill it with the data available</span></span>
+<span><span class="va">DBS_withORDs</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html" class="external-link">setValues</a></span><span class="op">(</span><span class="va">DBS_withORDs_example_structure</span>, <span class="co">#the raster</span></span>
+<span>                                     <span class="va">example_data_DBS_withORDs</span><span class="op">$</span><span class="va">matrix</span><span class="op">)</span> <span class="co">#the values</span></span>
+<span><span class="co">#Set the name of the layer</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">DBS_withORDs</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"DBS_withORDs"</span></span>
+<span><span class="co">#~~~~~~~~~~~~</span></span>
+<span></span>
+<span><span class="co"># "smalltol" is a threshold set to remove biologically implausible. E.g., 0.1 implies a distance of 100m which isn't overly important, so we recommend this as a minmum</span></span>
+<span><span class="va">smalltol</span> <span class="op">&lt;-</span> <span class="fl">0.01</span></span>
+<span></span>
+<span><span class="co"># create a layer which is the difference between with and without ORDs:</span></span>
+<span><span class="va">obstructed</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="op">(</span><span class="va">DBS_withORDs</span> <span class="op">-</span> <span class="va">DBS_map</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">smalltol</span><span class="op">)</span></span>
+<span><span class="va">obstructed_cropped</span> <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">obstructed</span>, <span class="va">crop_extent_raster</span><span class="op">)</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">obstructed_cropped</span><span class="op">)</span></span></code></pre></div>
+<p><img src="D_DistanceDecayMap_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># calculate percentage in ORD and buffer, and the percentage in the "shadow"/barriered area:</span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    pc_in_ORD_plus_buffer <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/extract.html" class="external-link">extract</a></span><span class="op">(</span><span class="va">DD_map</span>, <span class="va">ORDpolys_with_buffer</span><span class="op">)</span><span class="op">)</span>, na.rm<span class="op">=</span><span class="cn">T</span><span class="op">)</span>,</span>
+<span>    pc_in_ORD_shadow <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">DD_map</span><span class="op">[</span><span class="op">(</span><span class="va">DBS_withORDs</span> <span class="op">-</span> <span class="va">DBS_map</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">smalltol</span><span class="op">]</span>, na.rm<span class="op">=</span><span class="cn">T</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">out</span></span>
+<span><span class="co">#&gt;   pc_in_ORD_plus_buffer pc_in_ORD_shadow</span></span>
+<span><span class="co">#&gt; 1              1.156287         3.600242</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

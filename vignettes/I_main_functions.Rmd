@@ -34,7 +34,7 @@ There are 9 main functions behind the seabORD model:
 
 [8. Calculate the time taken to forage required amount] ("calc_foragecapture")
 
-[9. Calculate the foraging strategy for the timestep]("calc_strategy)
+[9. Calculate the foraging strategy for the timestep](%22calc_strategy)
 
 In the following chapters we describe with practical examples each of them.
 
@@ -882,6 +882,10 @@ plot(out$tmin, out$captured_g)
 # **9. Calculate the foraging strategy for the timestep**
 
 (*calc_strategy*)
+
+```{r}
+
+```
 
 ------------------------------------------------------------------------
 

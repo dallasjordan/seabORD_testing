@@ -58,6 +58,7 @@ reference:
   - frgcompdata_example_dd
   - BrdData_example_dd
   - UK9002491_bysea_3035
+  - example_lists_dd
 - title: "seabORD distance decay"
   contents:
   - calc_birddensmap_dd_pinfr

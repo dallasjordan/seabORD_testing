@@ -383,3 +383,57 @@
 #' @source Generated from "DBS_withORDs.tif".
 "DBS_withORDs_example"
 
+
+#' example_lists_calibration_dd
+#'
+#' NEED EXPL
+#'
+#' @format A list NEED EXPL
+#' \describe{
+#'   \item{\code{switches}}{A list NEED EXPL}
+#'   \item{\code{Par}}{A list NEED EXPL}
+#'   \item{\code{modPar}}{A list NEED EXPL}
+#'   \item{\code{ordPar}}{A list NEED EXPL}
+#' }
+#' @source NEED EXPL
+"example_lists_calibration_dd"
+
+
+
+#' UK9002491_bysea_3035
+#'
+#' NEED EXPL
+#'
+#' @format list of "raster" with the values of a raster in a matrix; and "metadata" with the extent and resolution to build back the raster in memory.
+#' \describe{
+#'   \item{matrix}{matrix of pixel values}
+#'   \item{metadata}{List of metadata: extent, resolution, and CRS.}
+#' }
+#' @source Generated from "UK9002491_bysea_3035.tif".
+"UK9002491_bysea_3035"
+
+
+#' BrdData_example_dd
+#'
+#' NEED EXPL
+#'
+#' @format list of "raster" with the values of a raster in a matrix; and "metadata" with the extent and resolution to build back the raster in memory.
+#' \describe{
+#'   \item{matrix}{matrix of pixel values}
+#'   \item{metadata}{List of metadata: extent, resolution, and CRS.}
+#' }
+#' @source NEED EXPL
+"BrdData_example_dd"
+
+#' frgcompdata_example_dd
+#'
+#' NEED EXPL
+#'
+#' @format list of "raster" with the values of a raster in a matrix; and "metadata" with the extent and resolution to build back the raster in memory.
+#' \describe{
+#'   \item{matrix}{matrix of pixel values}
+#'   \item{metadata}{List of metadata: extent, resolution, and CRS.}
+#' }
+#' @source NEED EXPL
+"frgcompdata_example_dd"
+

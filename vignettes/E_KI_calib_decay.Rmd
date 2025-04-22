@@ -28,7 +28,6 @@ library(gridExtra)
 library(magrittr) #used for ggplotting but users won't need this
 ```
 
-
 ```{r}
 
 ### UK outline
@@ -104,6 +103,7 @@ switches_example <- seabORD::example_lists_calibration_dd$switches
 switches_example$savebirdflightmap <- TRUE # turn this switch on if you want to see an example of the birdflightmap output
 
 ```
+
 ### Assorted spatial inputs
 
 Now load in all the spatial inputs. For more information please see the "Example kittiwake: step 1 - seabORD inputs" article.
@@ -221,6 +221,7 @@ FlightGridcorrection <- seabORD::FlightGridcorrection_3035
 
 #ORDpoly_example <- seabORD::ORDpoly_example # commented out as not required for calibration runs
 ```
+
 ## Set off calibration runs
 
 Now that the inputs have been prepared by loading them into our environment we can set off the run using the following code:
@@ -308,8 +309,8 @@ produpper <- 0.55
 prodlower <- 0.45
 
 # vertical ablines (please feel free to edit) which you can use as a visual guide to ascertain where the moderate conditions overlap between outputs
-lo <- 198
-hi <- 201
+lo <- 212
+hi <- 216
 
   pAd <- ggplot2::ggplot() +
     #geom_hline(yintercept = 0.1, lty=2) +

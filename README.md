@@ -1,6 +1,6 @@
 # SeabORD-R
 
-DRAFT UNDER CONSTRUCTION: FOR UKCEH INTERNAL USE ONLY. DO NOT CIRCULATE.
+DRAFT UNDER REVIEW: FOR UKCEH INTERNAL USE ONLY. DO NOT CIRCULATE.
 
 SeabORD-R Version 2.0.0
 
@@ -14,4 +14,4 @@ The purpose of the model is to predict the demographic effects on seabirds of di
 
 DOI: [example doi link](https://www.pnas.org/doi/abs/10.1073/pnas.2001988117)
 
-This link will be updated with the accompanying SeabORD paper in the coming months.
+This link will be updated with the accompanying SeabORD paper in due course.

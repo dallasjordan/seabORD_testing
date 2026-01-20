@@ -8,6 +8,8 @@ The purpose of the model is to predict the demographic effects on seabirds of di
 
 ![](man/figures/SeabORD_conceptual_inbox.png)
 
+Acknowledgements: This work was funded by (i) The Offshore Wind Evidence and Change programme, led by The Crown Estate in partnership with the Department for Energy Security and Net Zero and Department for Environment, Food & Rural Affairs through the Predators and Prey Around Renewable Energy Developments (PrePARED) project and by (ii) Scottish Government’s Contract Research Fund. We wish to thank Marine Directorate and members of Project Steering Groups for support and guidance throughout this project. Data used to parameterise the model were supported by UKCEH National Capability for UK Challenges programme NE/Y006208/1 and the Joint Nature Conservation Committee. 
+
 ------------------------------------------------------------------------
 
 #### "example article title"

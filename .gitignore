@@ -5,3 +5,8 @@ inst/doc
 /local/
 /renv/library/
 pkgdown_publish_code.R
+
+# Experiment artefacts (logs, generated outputs, one-off diagnostics)
+experiments/*.log
+experiments/diagnose.R
+outputs/

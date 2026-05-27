@@ -23,6 +23,12 @@
 #' @param fltdist_base Flight distance by sea, without ORDs. See user guide for details.
 #' @param FlightGridcorrection Flight distance transition layer (gdistance)
 #' @param ORDpoly The ORD footprints
+#' @param PreyMap Optional RasterLayer giving the *relative* spatial prey
+#'   distribution. If supplied, it is reprojected to the seamask grid and used
+#'   as `PreyAvailable_rel` (so per-cell values are scaled uniformly by
+#'   `Par$Pmedian[simrun]` each season). If `NULL` (default), prey is uniform
+#'   across all sea cells, reproducing previous behaviour. `Par$PreyType`
+#'   should be set to `"Map"` when supplying a `PreyMap`, `"Uniform"` otherwise.
 #'
 #' @importFrom raster ncol nrow raster calc cellStats crs extent ncell projectRaster values
 #' @importFrom stats sd
@@ -37,7 +43,7 @@
 #' @export
 seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                     spdat, BrdData, FrgCompData, fltdist_base,
-                    FlightGridcorrection, ORDpoly) {
+                    FlightGridcorrection, ORDpoly, PreyMap = NULL) {
 
   ##============================================================================
   ## SECTION -- Switches and internals values --
@@ -157,8 +163,15 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
   Colony$metadata <- bind_rows(Colony$metadata, newmeta) %>% dplyr::distinct()
 
   # > Create 'PreyAvailable_rel', the base prey map; actual values set per season.
-  # Note this version assumes uniform prey only
-  PreyAvailable_rel <- calc(seamask, fun = function(x) {x[x == 0] <- 1; return(x)})
+  # If PreyMap is supplied, use it as the relative spatial prey distribution
+  # (reprojected to the seamask grid and masked to sea cells).
+  # Otherwise default to uniform: 1 in every sea cell.
+  if (!is.null(PreyMap)) {
+    PreyAvailable_rel <- projectRaster(PreyMap, to = seamask)
+    PreyAvailable_rel[is.na(seamask)] <- NA
+  } else {
+    PreyAvailable_rel <- calc(seamask, fun = function(x) {x[x == 0] <- 1; return(x)})
+  }
 
   #-----------------------------------------------------------------------------
   # > Clean the forage competition map
@@ -477,9 +490,12 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
     names(ForageComp) <- thisRun$seasonlist
 
     #> Set the prey level for this particular season pair-----------------------
+    # PreyType is retained as a user-facing flag for scenario tracking. Both
+    # branches now scale PreyAvailable_rel by Par$Pmedian[simrun]; the spatial
+    # variation (if any) is already encoded in PreyAvailable_rel above.
     PreyAvailable <- switch(Par$PreyType,
                             "Uniform" = PreyAvailable_rel*Par$Pmedian[simrun],
-                            "Map" = PreyAvailable_rel*2.0*Par$Pmedian[simrun]
+                            "Map" = PreyAvailable_rel*Par$Pmedian[simrun]
     )
 
     ## SUBSECTION -- For each simulated breeding season -- =====================

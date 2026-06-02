@@ -32,6 +32,8 @@ make_transect_prey <- function(seamask,
                                length_m     = 10000,
                                width_m      = 0,
                                multiplier   = 2.0,
+                               sea_only     = TRUE,
+                               max_attempts_per_transect = 200,
                                Pmedian_value = NULL,
                                energy_prey   = NULL,
                                seed          = NULL) {
@@ -48,30 +50,62 @@ make_transect_prey <- function(seamask,
   outer     <- sf::st_buffer(ord_union, dist = max_distance)
   ring      <- sf::st_difference(outer, inner)
 
-  # --- 2. Random midpoints inside the ring ---
-  midpts <- sf::st_sample(ring, size = n_transects, type = "random")
+  sea_cells <- which(raster::values(seamask) == 0)
 
-  # --- 3. Random orientations and build linestrings around each midpoint ---
-  angles   <- stats::runif(n_transects, 0, pi)
+  # --- 2. Draw transects one at a time. If sea_only = TRUE, reject any candidate
+  #        whose rasterised cells include a non-sea cell (i.e. crosses land). ---
   half_len <- length_m / 2
+  ring_crs <- sf::st_crs(ORDpoly)
 
-  transect_list <- lapply(seq_len(n_transects), function(i) {
-    p  <- sf::st_coordinates(midpts[i])
-    dx <- half_len * cos(angles[i])
-    dy <- half_len * sin(angles[i])
-    sf::st_linestring(matrix(c(p[1] - dx, p[1] + dx,
-                               p[2] - dy, p[2] + dy), ncol = 2))
-  })
-  transects_sfc <- sf::st_sfc(transect_list, crs = sf::st_crs(ORDpoly))
+  draw_one <- function() {
+    midpt <- sf::st_sample(ring, size = 1, type = "random")
+    angle <- stats::runif(1, 0, pi)
+    p     <- sf::st_coordinates(midpt)
+    dx    <- half_len * cos(angle)
+    dy    <- half_len * sin(angle)
+    line  <- sf::st_linestring(matrix(c(p[1] - dx, p[1] + dx,
+                                        p[2] - dy, p[2] + dy), ncol = 2))
+    list(line = line, accepted_cells = NULL)
+  }
 
-  # --- 4. Optional buffering into corridors ---
-  geom <- if (width_m > 0) sf::st_buffer(transects_sfc, dist = width_m / 2) else transects_sfc
+  transect_list  <- vector("list", n_transects)
+  cells_per      <- vector("list", n_transects)
+  attempts_total <- 0L
 
-  # --- 5. Rasterise to cell numbers, restrict to sea (value 0 in this seamask) ---
-  rasterized <- raster::rasterize(sf::as_Spatial(geom), seamask, field = 1)
-  transect_cells <- which(!is.na(raster::values(rasterized)))
-  sea_cells      <- which(raster::values(seamask) == 0)
-  target_cells   <- intersect(transect_cells, sea_cells)
+  for (i in seq_len(n_transects)) {
+    accepted <- FALSE
+    for (k in seq_len(max_attempts_per_transect)) {
+      attempts_total <- attempts_total + 1L
+      cand <- draw_one()
+      line_sfc <- sf::st_sfc(list(cand$line), crs = ring_crs)
+      geom_one <- if (width_m > 0) sf::st_buffer(line_sfc, dist = width_m / 2) else line_sfc
+
+      rast_one  <- raster::rasterize(sf::as_Spatial(geom_one), seamask, field = 1)
+      cell_idx  <- which(!is.na(raster::values(rast_one)))
+
+      if (length(cell_idx) == 0) next  # transect didn't intersect any cells (rare)
+      if (sea_only) {
+        if (!all(cell_idx %in% sea_cells)) next  # touches land -> reject
+      }
+
+      transect_list[[i]] <- cand$line
+      cells_per[[i]]     <- intersect(cell_idx, sea_cells)
+      accepted <- TRUE
+      break
+    }
+    if (!accepted) {
+      stop(sprintf(
+        "make_transect_prey: could not place transect %d entirely over sea after %d attempts. Try reducing length_m / width_m, or relaxing sea_only = FALSE.",
+        i, max_attempts_per_transect))
+    }
+  }
+
+  transects_sfc  <- sf::st_sfc(transect_list, crs = ring_crs)
+  target_cells   <- unique(unlist(cells_per))
+  transect_cells <- target_cells  # alias retained for clarity below
+
+  message(sprintf("Placed %d transect(s) in %d total draws (sea_only = %s).",
+                  n_transects, attempts_total, sea_only))
 
   # --- 6. Build the PreyMap: uniform 1 over sea, multiplier in target cells ---
   PreyMap <- raster::calc(seamask, fun = function(x) { x[x == 0] <- 1; x })

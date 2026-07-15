@@ -163,11 +163,20 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
   Colony$metadata <- bind_rows(Colony$metadata, newmeta) %>% dplyr::distinct()
 
   # > Create 'PreyAvailable_rel', the base prey map; actual values set per season.
-  # If PreyMap is supplied, use it as the relative spatial prey distribution
-  # (reprojected to the seamask grid and masked to sea cells).
+  # If PreyMap is supplied, use it as the relative spatial prey distribution.
   # Otherwise default to uniform: 1 in every sea cell.
   if (!is.null(PreyMap)) {
-    PreyAvailable_rel <- projectRaster(PreyMap, to = seamask)
+    # If PreyMap already sits on the seamask grid, use it as-is. Reprojecting an
+    # already-aligned raster with bilinear interpolation can smear a sharp
+    # single-cell prey spike into its neighbours, so only reproject when the
+    # grids genuinely differ.
+    if (isTRUE(raster::compareRaster(PreyMap, seamask,
+                                     extent = TRUE, rowcol = TRUE, crs = TRUE,
+                                     res = TRUE, stopiffalse = FALSE))) {
+      PreyAvailable_rel <- PreyMap
+    } else {
+      PreyAvailable_rel <- projectRaster(PreyMap, to = seamask)
+    }
     PreyAvailable_rel[is.na(seamask)] <- NA
   } else {
     PreyAvailable_rel <- calc(seamask, fun = function(x) {x[x == 0] <- 1; return(x)})

@@ -109,6 +109,9 @@ modPar   <- example_1_lists$modPar
 ordPar   <- example_1_lists$ordPar
 switches <- example_1_lists$switches
 
+# Export per-bird foraging destinations (one row per bird per timestep).
+switches$saveperbirddest <- TRUE
+
 # --- Experiment knobs ---
 POP_FRACTION  <- 0.05    # 5% of the Isle of May kittiwake population, for speed
 N_REPLICATES  <- 3       # small for a quick look; bump to >= 20 for real inference
@@ -243,5 +246,46 @@ adult %>%
                    mean_BM_condition = mean(BM_condition.mn),
                    .groups = "drop") %>%
   as.data.frame() %>% print()
+
+# =============================================================================
+# 8. Per-bird foraging destinations
+# =============================================================================
+# res$output_dest: one row per bird per timestep, with the intended (FirstChoice)
+# and actual (Destination) foraging cell numbers + their EPSG:3035 coordinates,
+# whether the bird was displaced, and the flight distance (ActualKm). This is
+# destination POINTS, not tracks -- seabORD has no movement paths.
+
+dest <- purrr::imap_dfr(results, function(res, scen) {
+  if (is.null(res$output_dest)) return(NULL)
+  dplyr::mutate(res$output_dest, scenario = scen, .before = 1)
+})
+
+if (nrow(dest) > 0) {
+  saveRDS(dest, "outputs/point_enrichment_destinations.rds")
+  readr::write_csv(dest, "outputs/point_enrichment_destinations.csv")
+  cat(sprintf("\nPer-bird destinations: %d rows (%d birds x timesteps x seasons x reps x scenarios)\n",
+              nrow(dest), dplyr::n_distinct(dest$BirdID)))
+  cat("Saved to outputs/point_enrichment_destinations.{rds,csv}\n")
+
+  # How many bird-visits landed in the enriched cell?
+  hits <- sum(dest$Destination == point_res$target_cell)
+  cat(sprintf("Bird-visits to the enriched cell (%d): %d of %d (%.3f%%)\n",
+              point_res$target_cell, hits, nrow(dest), 100 * hits / nrow(dest)))
+
+  # Map the actual foraging destinations (enriched 'scen' season), windfarms + patch
+  d1 <- dplyr::filter(dest, scenario == "enriched", Season == "scen")
+  png("outputs/destinations_map.png", width = 1200, height = 1000, res = 150)
+  bb <- sf::st_bbox(c(sf::st_geometry(ORDpoly), point_res$point))
+  pad <- 30000
+  plot(raster::crop(seamask, raster::extent(bb["xmin"]-pad, bb["xmax"]+pad,
+                                            bb["ymin"]-pad, bb["ymax"]+pad)),
+       col = "lightblue", legend = FALSE, main = "Foraging destinations (enriched, scen)")
+  points(d1$dest_x, d1$dest_y, pch = 16, cex = 0.4,
+         col = grDevices::adjustcolor("navy", 0.35))
+  plot(sf::st_geometry(ORDpoly), add = TRUE, border = "black", lwd = 2)
+  plot(point_res$point, add = TRUE, col = "red", pch = 4, cex = 2, lwd = 3)
+  dev.off()
+  cat("Destination map saved to outputs/destinations_map.png\n")
+}
 
 cat("\nDONE. Raw results saved to outputs/point_enrichment_results.rds\n")

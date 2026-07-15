@@ -317,6 +317,11 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
   # Summary of all chicks at the end of the season
   output_y0 <- create_yearsheet(bycol = switches$bycol, bysus = switches$bysus)
 
+  # Per-bird foraging destinations (one row per bird per timestep). Only
+  # captured when switches$saveperbirddest is TRUE, as it can be large for
+  # full-population runs. Returned as SeabORDSummary$output_dest.
+  perbird_dest <- list()
+
   # Summarise all birds together - regional output
   output_i0 <- create_summarylist(bycol = switches$bycol, byi = FALSE, byall = FALSE)
 
@@ -687,6 +692,22 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                                  by = list(c=TodaysFlights$Destination), FUN=sum)
           BirdFlightMap[i$c] <- BirdFlightMap[i$c] + i$x
 
+          # Record per-bird foraging destinations for export (optional)
+          if (isTRUE(switches$saveperbirddest)) {
+            perbird_dest[[length(perbird_dest) + 1L]] <- tibble::tibble(
+              Rep         = simrun,
+              Season      = season,
+              t           = tstep,
+              BirdID      = TodaysFlights$BirdID,
+              colony      = TodaysFlights$colony,
+              wfde        = TodaysFlights$wfde,
+              wfbe        = TodaysFlights$wfbe,
+              FirstChoice = TodaysFlights$FirstChoice,
+              Destination = TodaysFlights$Destination,
+              Displaced   = TodaysFlights$Displaced,
+              ActualKm    = TodaysFlights$ActualKm)
+          }
+
           # Todays competition map
           TodaysForageComp <- base_grid
           values(TodaysForageComp) <- ForageComp[[season]][,tstep]
@@ -975,6 +996,19 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
 
   } #<-- (next simrun) or end of duplicate pairs --------------------------------<
 
+  # Assemble per-bird destinations and attach cell-centre coordinates (EPSG:3035)
+  # for the intended (FirstChoice) and actual (Destination) foraging cells.
+  perbird_dest_df <- NULL
+  if (isTRUE(switches$saveperbirddest) && length(perbird_dest) > 0) {
+    perbird_dest_df <- dplyr::bind_rows(perbird_dest)
+    dxy <- raster::xyFromCell(seamask, perbird_dest_df$Destination)
+    fxy <- raster::xyFromCell(seamask, perbird_dest_df$FirstChoice)
+    perbird_dest_df$dest_x  <- dxy[, 1]
+    perbird_dest_df$dest_y  <- dxy[, 2]
+    perbird_dest_df$first_x <- fxy[, 1]
+    perbird_dest_df$first_y <- fxy[, 2]
+  }
+
   ##============================================================================
   ## SECTION -- Summary Calculations -- EXPERIMENTAL
 
@@ -1119,6 +1153,9 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
     }
   }
 
+
+  # Attach the per-bird destinations (NULL unless switches$saveperbirddest = TRUE)
+  SeabORDSummary$output_dest <- perbird_dest_df
 
   ## Return the list
   return(SeabORDSummary)

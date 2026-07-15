@@ -128,8 +128,14 @@ print_injection <- function(inj) {
 # seamask CRS) or auto-picked as the most-visited (highest BrdData) reachable
 # sea cell inside a ring `min_distance`-`max_distance` m outside the windfarm.
 #
-# The enrichment size is specified via resolve_injection() args (multiplier /
-# target_mass_g / target_kJ).
+# The enrichment size (biomass) is specified via resolve_injection() args
+# (multiplier / target_mass_g / target_kJ). For higher-quality prey such as
+# offal, set offal_energy_density (kJ/g): this returns an EnergyMap so that birds
+# foraging in the enriched cell extract that many kJ per gram (instead of the
+# species default). Pass BOTH PreyMap and EnergyMap to seabord().
+#
+# Example (dump 2000 kg of offal at 9 kJ/g):
+#   make_point_prey(..., target_mass_g = 2000*1000, offal_energy_density = 9)
 # ------------------------------------------------------------------------------
 make_point_prey <- function(seamask, ORDpoly,
                             Pmedian_value, energy_prey_model,
@@ -140,7 +146,8 @@ make_point_prey <- function(seamask, ORDpoly,
                             multiplier = NULL,
                             target_mass_g = NULL,
                             target_kJ = NULL,
-                            target_energy_density = NULL) {
+                            target_energy_density = NULL,
+                            offal_energy_density = NULL) {
 
   stopifnot(inherits(seamask, "RasterLayer"))
   sea_cells <- which(raster::values(seamask) == 0)
@@ -186,13 +193,29 @@ make_point_prey <- function(seamask, ORDpoly,
   v[target_cell] <- inj$multiplier
   raster::values(PreyMap) <- v
 
+  # --- Optional EnergyMap: give the enriched cell a different prey quality ---
+  # NA everywhere (falls back to species density in the model) except the
+  # target cell, which gets offal_energy_density kJ/g.
+  EnergyMap <- NULL
+  if (!is.null(offal_energy_density)) {
+    EnergyMap <- seamask
+    raster::values(EnergyMap) <- NA_real_
+    EnergyMap[target_cell] <- offal_energy_density
+    # Energy actually made available in the cell = biomass (g) * offal density.
+    inj$offal_energy_density <- offal_energy_density
+    inj$cell_energy_kJ_offal <- inj$total_mass_g * offal_energy_density
+  }
+
   xy <- raster::xyFromCell(seamask, target_cell)
   point <- sf::st_sfc(sf::st_point(as.numeric(xy)), crs = sf::st_crs(ORDpoly))
 
-  message(sprintf("Point enrichment at cell %d (x=%.0f, y=%.0f): multiplier=%.1f",
-                  target_cell, xy[1], xy[2], inj$multiplier))
+  message(sprintf("Point enrichment at cell %d (x=%.0f, y=%.0f): multiplier=%.1f%s",
+                  target_cell, xy[1], xy[2], inj$multiplier,
+                  if (!is.null(offal_energy_density))
+                    sprintf(", offal @ %.1f kJ/g", offal_energy_density) else ""))
 
-  list(PreyMap = PreyMap, target_cell = target_cell, target_cells = target_cell,
+  list(PreyMap = PreyMap, EnergyMap = EnergyMap,
+       target_cell = target_cell, target_cells = target_cell,
        point = point, ring = ring, injection = inj)
 }
 

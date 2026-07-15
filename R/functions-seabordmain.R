@@ -29,6 +29,11 @@
 #'   `Par$Pmedian[simrun]` each season). If `NULL` (default), prey is uniform
 #'   across all sea cells, reproducing previous behaviour. `Par$PreyType`
 #'   should be set to `"Map"` when supplying a `PreyMap`, `"Uniform"` otherwise.
+#' @param EnergyMap Optional RasterLayer giving the prey energy density (kJ per
+#'   gram) per cell. Where a cell has a value, birds foraging there gain that
+#'   many kJ per gram caught (and need correspondingly fewer grams to meet their
+#'   energy requirement) -- e.g. a cell of dumped offal at 9 kJ/g. Cells that are
+#'   NA, and the default `NULL`, fall back to the species value `spdat$energy_prey`.
 #'
 #' @importFrom raster ncol nrow raster calc cellStats crs extent ncell projectRaster values
 #' @importFrom stats sd
@@ -43,7 +48,7 @@
 #' @export
 seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                     spdat, BrdData, FrgCompData, fltdist_base,
-                    FlightGridcorrection, ORDpoly, PreyMap = NULL) {
+                    FlightGridcorrection, ORDpoly, PreyMap = NULL, EnergyMap = NULL) {
 
   ##============================================================================
   ## SECTION -- Switches and internals values --
@@ -180,6 +185,21 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
     PreyAvailable_rel[is.na(seamask)] <- NA
   } else {
     PreyAvailable_rel <- calc(seamask, fun = function(x) {x[x == 0] <- 1; return(x)})
+  }
+
+  # > Prey energy density (kJ/g) per cell. NULL -> uniform species value applied
+  # inside seabord_daystep. If supplied, align to the seamask grid (using it
+  # directly when already aligned, to keep sharp per-cell values exact).
+  if (!is.null(EnergyMap)) {
+    if (isTRUE(raster::compareRaster(EnergyMap, seamask,
+                                     extent = TRUE, rowcol = TRUE, crs = TRUE,
+                                     res = TRUE, stopiffalse = FALSE))) {
+      EnergyMapAligned <- EnergyMap
+    } else {
+      EnergyMapAligned <- projectRaster(EnergyMap, to = seamask)
+    }
+  } else {
+    EnergyMapAligned <- NULL
   }
 
   #-----------------------------------------------------------------------------
@@ -684,7 +704,8 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                                          ChickState = ChickState,
                                          Opt_BM_chick = Opt_BM_chick,
                                          base_grid = base_grid,
-                                         fixedVals = fixedVals)
+                                         fixedVals = fixedVals,
+                                         EnergyMap = EnergyMapAligned)
 
           # Setting dead chicks to NA at the end of the season so that those that died on day 30 are recorded
           # correctly for individual plotting purposes:

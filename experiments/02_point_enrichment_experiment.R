@@ -110,9 +110,16 @@ ordPar   <- example_1_lists$ordPar
 switches <- example_1_lists$switches
 
 # --- Experiment knobs ---
-POP_FRACTION <- 0.05     # 5% of the Isle of May kittiwake population, for speed
-N_REPLICATES <- 3        # small for a quick look; bump to >= 20 for real inference
+POP_FRACTION  <- 0.05    # 5% of the Isle of May kittiwake population, for speed
+N_REPLICATES  <- 3       # small for a quick look; bump to >= 20 for real inference
 FIXED_PMEDIAN <- 158     # g/cell baseline prey (fixed so injection is deterministic)
+
+# --- Offal knobs (edit these) ---
+OFFAL_KG       <- 2000   # biomass of offal dumped in the enriched cell
+OFFAL_KJ_PER_G <- 9      # energy density of offal AS AVAILABLE TO KITTIWAKES (kJ/g).
+                         # Birds foraging in this cell extract 9 kJ per gram here,
+                         # vs the species default (6.52 kJ/g) everywhere else.
+                         # => cell energy availability = 2000 kg * 9 kJ/g = 18,000,000 kJ.
 
 Par$Nscalefactor <- POP_FRACTION
 Par$Pmedian      <- rep(FIXED_PMEDIAN, N_REPLICATES)   # length must equal Nreplicates
@@ -125,30 +132,31 @@ cat("Simulated pairs:", ceiling(Par$Npairspercol * POP_FRACTION),
     "of", Par$Npairspercol, "(", 100*POP_FRACTION, "% )\n")
 
 # =============================================================================
-# 4. Build the enriched-cell PreyMap
+# 4. Build the enriched-cell PreyMap + EnergyMap (offal)
 # =============================================================================
-# You specified: 2000 kg of prey at 9 kJ/g = 18,000,000 kJ in one cell.
-# We express this as target_kJ with your assumed density (9 kJ/g); resolve_injection
-# converts it to biomass (grams) and the per-cell PreyMap multiplier.
+# Dumps OFFAL_KG of biomass into one cell (PreyMap) and marks that cell as
+# OFFAL_KJ_PER_G kJ/g (EnergyMap), so birds foraging there extract offal-quality
+# energy. Cell energy availability = OFFAL_KG * OFFAL_KJ_PER_G.
 #
-# NOTE on WHERE: by default we auto-place the patch in the most-visited reachable
-# (BrdData > 0) sea cell within a 20-40 km ring outside the windfarm complex, to
-# maximise the chance birds actually encounter it. Override with `location = c(x,y)`
-# (seamask EPSG:3035 coords) to pin it to a specific spot.
+# WHERE: by default the patch is auto-placed in the most-visited reachable
+# (BrdData > 0) sea cell within a 20-40 km ring outside the windfarm complex.
+# ***You specify the location*** by uncommenting `location = c(x, y)` (seamask
+# EPSG:3035 coords) to pin it to an exact spot.
 
 point_res <- make_point_prey(
   seamask           = seamask,
   ORDpoly           = ORDpoly,
   Pmedian_value     = FIXED_PMEDIAN,
-  energy_prey_model = spdat$energy_prey,   # KI = 6.52 kJ/g (what birds actually extract)
-  BrdData           = BrdData,             # used to auto-pick a reachable cell
+  energy_prey_model = spdat$energy_prey,       # species default: 6.52 kJ/g
+  BrdData           = BrdData,                 # used to auto-pick a reachable cell
   min_distance      = 20000,
   max_distance      = 40000,
-  target_kJ             = 18e6,            # your 18 million kJ
-  target_energy_density = 9                # your assumed 9 kJ/g -> 2000 kg biomass
-  # location = c(3600000, 3760000)         # <- uncomment to pin an exact cell
+  target_mass_g        = OFFAL_KG * 1000,      # biomass of offal dumped (grams)
+  offal_energy_density = OFFAL_KJ_PER_G        # offal quality (kJ/g) in this cell
+  # location = c(3600000, 3760000)             # <- uncomment to pin an exact cell
 )
-PreyMap_enriched <- point_res$PreyMap
+PreyMap_enriched   <- point_res$PreyMap
+EnergyMap_enriched <- point_res$EnergyMap
 
 print_injection(point_res$injection)
 
@@ -162,8 +170,9 @@ print_injection(point_res$injection)
 #   min_distance = 20000, max_distance = 40000, reachable_only = TRUE, BrdData = BrdData,
 #   target_kJ = 18e6, target_energy_density = 9
 # )
-# PreyMap_enriched <- area_res$PreyMap
-# point_res <- area_res   # so downstream diagnostics/plots use the area cells
+# PreyMap_enriched   <- area_res$PreyMap
+# EnergyMap_enriched <- NULL   # area version does not set offal quality (biomass only)
+# point_res <- area_res        # so downstream diagnostics/plots use the area cells
 # print_injection(area_res$injection)
 
 # =============================================================================
@@ -185,21 +194,21 @@ saveRDS(point_res, "outputs/point_enrichment_geometry.rds")
 # 6. Run the two scenarios (same seed, same windfarms; only prey differs)
 # =============================================================================
 scenarios <- list(
-  baseline = NULL,               # uniform prey
-  enriched = PreyMap_enriched    # single enriched cell
+  baseline = list(PreyMap = NULL,             EnergyMap = NULL),               # uniform
+  enriched = list(PreyMap = PreyMap_enriched, EnergyMap = EnergyMap_enriched)  # offal cell
 )
 
-run_one <- function(PreyMap, label) {
+run_one <- function(sc, label) {
   message("=== Running scenario: ", label, " ===")
   Par_i <- Par
-  Par_i$PreyType <- if (is.null(PreyMap)) "Uniform" else "Map"
+  Par_i$PreyType <- if (is.null(sc$PreyMap)) "Uniform" else "Map"
   t0 <- Sys.time()
   res <- seabord(
     Par = Par_i, modPar = modPar, ordPar = ordPar, switches = switches,
     seamask = seamask, spadat1 = spadat1, spadat2 = spadat2, spdat = spdat,
     BrdData = BrdData, FrgCompData = FrgCompData, fltdist_base = fltdist_base,
     FlightGridcorrection = FlightGridcorrection, ORDpoly = ORDpoly,
-    PreyMap = PreyMap
+    PreyMap = sc$PreyMap, EnergyMap = sc$EnergyMap
   )
   message(sprintf("   done in %.1f min", as.numeric(Sys.time() - t0, units = "mins")))
   res

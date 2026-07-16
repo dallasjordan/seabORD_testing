@@ -36,15 +36,18 @@ OFFAL_KJ_PER_G <- 9      # offal quality (kJ/g available to kittiwakes)
 WF_WITHOUT_BB <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = FALSE)
 WF_WITH_BB    <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = TRUE)
 
-# Offal near the colony (spatial mechanism, 3a)
-COLONY_RADIUS_M <- 20000                     # disc radius around the Isle of May
-SPATIAL_OFFAL_KG <- c(0, 2000, 5000, 10000, 20000)   # biomass sweep (kg)
+# --- 3a. SPATIAL offal near the colony; birds find it RANDOMLY (via BrdData) ---
+COLONY_RADIUS_M  <- 20000                            # disc radius around the Isle of May
+SPATIAL_OFFAL_KG <- c(0, 2000, 5000, 10000, 20000)   # total biomass dumped (kg)
 
-# Per-bird access (mechanism 3b)
-ACCESS_FRAC <- c(0, 0.10, 0.25, 0.47, 0.70)  # fraction-of-population sweep
-
-# Offal biomass made available to each per-bird accessor per trip (>> saturation)
-OFFAL_BIOMASS_PERBIRD_G <- 2000 * 1000
+# --- 3b. Offal cell that a GUARANTEED fraction of birds always feed on ---------
+# ACCESS_FRAC is a fixed ASSUMPTION here (not swept): this share of adults feeds
+# on the offal every trip. We sweep the offal AMOUNT to find how much is needed.
+ACCESS_FRAC_FIXED <- 0.47                            # 47% of adults always feed on offal
+PERBIRD_OFFAL_KG  <- c(0, 0.2, 0.5, 1, 2, 5)         # offal available per accessing bird per trip (kg)
+# NB: the intake half-saturation (IR_half_a) is 900 g, so this sweep deliberately
+# spans below and above saturation -- past ~2-3 kg birds simply max out their
+# intake and extra offal stops helping.
 
 colony_point <- COLONY_POINT   # from _setup_inputs.R
 
@@ -66,7 +69,8 @@ get_metrics <- function(res) {
 
 # Run one full configuration and return its metrics + a label row.
 run_config <- function(windfarms, label, mechanism, offal_amount,
-                       PreyMap = NULL, EnergyMap = NULL, offal_frac = 0) {
+                       PreyMap = NULL, EnergyMap = NULL,
+                       offal_frac = 0, offal_biomass_g = 0) {
   message(sprintf("--- %s (%s = %s) ---", label, mechanism, offal_amount))
   wf <- load_windfarms(WINDFARM_SHP, target_crs = raster::crs(seamask),
                        include = names(windfarms)[windfarms])
@@ -74,8 +78,8 @@ run_config <- function(windfarms, label, mechanism, offal_amount,
   Par_i$Nscalefactor       <- POP_FRACTION
   Par_i$Pmedian            <- rep(CALIBRATED_PMEDIAN, N_REPLICATES)
   Par_i$PreyType           <- if (is.null(PreyMap)) "Uniform" else "Map"
-  Par_i$OffalAccessFrac    <- offal_frac
-  Par_i$OffalBiomass_g     <- OFFAL_BIOMASS_PERBIRD_G
+  Par_i$OffalAccessFrac    <- offal_frac       # 0 = per-bird offal access off
+  Par_i$OffalBiomass_g     <- offal_biomass_g  # offal available per accessing bird per trip
   Par_i$OffalEnergyDensity <- OFFAL_KJ_PER_G
   modPar_i <- modPar; modPar_i$Nreplicates <- N_REPLICATES
   ordPar_i <- ordPar; ordPar_i$include_ORDs <- wf$include_ORDs
@@ -131,11 +135,20 @@ for (kg in SPATIAL_OFFAL_KG) {
 }
 
 # =============================================================================
-# 3b. Per-bird offal access -- sweep the access fraction
+# 3b. Offal cell fed on by a GUARANTEED share of birds -- sweep the offal AMOUNT
 # =============================================================================
-for (fr in ACCESS_FRAC) {
-  key <- paste0("access_", round(100 * fr), "pct")
-  results[[key]] <- run_config(WF_WITH_BB, key, "access_frac", fr, offal_frac = fr)
+# ACCESS_FRAC_FIXED (47%) of adults feed on the offal every trip, regardless of
+# where they would otherwise forage. We sweep how much offal is available to each
+# of them per trip, and find the amount that restores the WITHOUT_BB target.
+cat(sprintf("\n3b assumes %.0f%% of adults always feed on the offal; sweeping the amount.\n",
+            100 * ACCESS_FRAC_FIXED))
+for (kg in PERBIRD_OFFAL_KG) {
+  key <- paste0("perbird_", kg, "kg")
+  # kg = 0 means no offal at all -> switch access off so birds forage normally
+  # (rather than being sent to an empty offal source and starving).
+  fr <- if (kg == 0) 0 else ACCESS_FRAC_FIXED
+  results[[key]] <- run_config(WF_WITH_BB, key, "perbird_offal_kg", kg,
+                               offal_frac = fr, offal_biomass_g = kg * 1000)
   save_progress()
 }
 
@@ -147,32 +160,33 @@ readr::write_csv(res_df, "outputs/bb_compensation_results.csv")
 cat("\n=== All configurations ===\n"); print(as.data.frame(res_df), row.names = FALSE)
 
 # Interpolate the offal amount at which each metric reaches the WITHOUT_BB target.
-amount_at <- function(df, target) {
-  df <- dplyr::arrange(df, offal_amount)
-  if (target < min(df[[3]]) || target > max(df[[3]])) return(NA_real_)  # 3rd col = metric
-  approx(df[[3]], df$offal_amount, xout = target)$y
-}
-for (mech in c("spatial_kg", "access_frac")) {
-  d <- dplyr::filter(res_df, mechanism == mech)
-  ds <- dplyr::select(d, offal_amount, survival);     names(ds)[2] <- "m"; ds <- dplyr::rename(ds, val = m)
-  dp <- dplyr::select(d, offal_amount, productivity); names(dp)[2] <- "m"; dp <- dplyr::rename(dp, val = m)
-  need_surv <- approx(ds$val, ds$offal_amount, xout = target_surv, ties = mean)$y
-  need_prod <- approx(dp$val, dp$offal_amount, xout = target_prod, ties = mean)$y
-  unit <- if (mech == "spatial_kg") "kg offal" else "fraction access"
-  cat(sprintf("\n[%s] to restore survival  : %s %s\n", mech,
-              ifelse(is.na(need_surv), "outside swept range", round(need_surv, 3)), unit))
-  cat(sprintf("[%s] to restore productivity: %s %s\n", mech,
-              ifelse(is.na(need_prod), "outside swept range", round(need_prod, 3)), unit))
-  cat(sprintf("[%s] => offal needed to offset BB: %s %s (max of the two)\n", mech,
-              ifelse(any(is.na(c(need_surv,need_prod))), "extend the sweep",
-                     round(max(need_surv, need_prod, na.rm = TRUE), 3)), unit))
+# Both mechanisms now titrate an AMOUNT (kg), under different access assumptions.
+mech_desc <- c(
+  spatial_kg      = "total kg dumped near the colony; birds find it randomly (BrdData)",
+  perbird_offal_kg = sprintf("kg per accessing bird per trip; %.0f%% of adults always feed on it",
+                             100 * ACCESS_FRAC_FIXED)
+)
+for (mech in names(mech_desc)) {
+  d <- dplyr::filter(res_df, mechanism == mech) %>% dplyr::arrange(offal_amount)
+  if (nrow(d) < 2) next
+  need_surv <- approx(d$survival,     d$offal_amount, xout = target_surv, ties = mean)$y
+  need_prod <- approx(d$productivity, d$offal_amount, xout = target_prod, ties = mean)$y
+  cat(sprintf("\n[%s]  (%s)\n", mech, mech_desc[[mech]]))
+  cat(sprintf("   kg to restore survival    : %s\n",
+              ifelse(is.na(need_surv), "outside swept range", round(need_surv, 3))))
+  cat(sprintf("   kg to restore productivity: %s\n",
+              ifelse(is.na(need_prod), "outside swept range", round(need_prod, 3))))
+  cat(sprintf("   => OFFAL NEEDED TO OFFSET BERWICK BANK: %s kg (whichever metric needs more)\n",
+              ifelse(all(is.na(c(need_surv, need_prod))), "extend the sweep",
+                     round(max(need_surv, need_prod, na.rm = TRUE), 3))))
 }
 
 # =============================================================================
 # 5. Dose-response plot
 # =============================================================================
 library(ggplot2)
-plot_df <- res_df %>% dplyr::filter(mechanism %in% c("spatial_kg", "access_frac")) %>%
+plot_df <- res_df %>%
+  dplyr::filter(mechanism %in% c("spatial_kg", "perbird_offal_kg")) %>%
   tidyr::pivot_longer(c(survival, productivity), names_to = "metric", values_to = "value")
 p <- ggplot(plot_df, aes(offal_amount, value, colour = metric)) +
   geom_point() + geom_line() +
@@ -181,8 +195,9 @@ p <- ggplot(plot_df, aes(offal_amount, value, colour = metric)) +
              aes(yintercept = y, colour = metric), lty = 2) +
   facet_wrap(~mechanism, scales = "free_x") +
   labs(title = "Offal needed to offset Berwick Bank",
-       subtitle = "dashed = WITHOUT-BB target; x = offal amount (kg or access fraction)",
-       x = "Offal amount", y = "Value")
+       subtitle = sprintf("dashed = WITHOUT-BB target | spatial: total kg, random access | perbird: kg/bird/trip, %.0f%% always feed",
+                          100 * ACCESS_FRAC_FIXED),
+       x = "Offal amount (kg)", y = "Value")
 ggsave("outputs/bb_compensation_doseresponse.png", p, width = 10, height = 5, dpi = 150)
 
 cat("\nDONE. Results: outputs/bb_compensation_results.{rds,csv}; plot: outputs/bb_compensation_doseresponse.png\n")

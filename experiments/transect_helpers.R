@@ -332,9 +332,18 @@ make_transect_prey <- function(seamask, ORDpoly,
 # Enrichment size via resolve_injection() (multiplier / target_mass_g / target_kJ).
 # With a multiplier, every zone cell is scaled by it. With target_mass_g/target_kJ,
 # the total is spread evenly across the zone cells.
+#
+# The zone is an annulus min_distance..max_distance around a CENTRE. By default
+# the centre is the windfarm footprint (pass ORDpoly). To enrich near a colony
+# instead, pass `center` (an sf point/geometry, e.g. the Isle of May) and use
+# min_distance = 0 for a solid disc of radius max_distance.
+#
+# For offal (higher-quality prey), set offal_energy_density (kJ/g): the returned
+# EnergyMap marks the enriched cells at that density (birds there extract it).
 # ------------------------------------------------------------------------------
-make_area_prey <- function(seamask, ORDpoly,
+make_area_prey <- function(seamask, ORDpoly = NULL,
                            Pmedian_value, energy_prey_model,
+                           center = NULL,
                            min_distance = 20000,
                            max_distance = 40000,
                            reachable_only = TRUE,
@@ -342,22 +351,25 @@ make_area_prey <- function(seamask, ORDpoly,
                            multiplier = NULL,
                            target_mass_g = NULL,
                            target_kJ = NULL,
-                           target_energy_density = NULL) {
+                           target_energy_density = NULL,
+                           offal_energy_density = NULL) {
 
   stopifnot(inherits(seamask, "RasterLayer"), min_distance < max_distance)
   if (reachable_only && is.null(BrdData)) {
     stop("make_area_prey: reachable_only = TRUE needs BrdData.")
   }
+  if (is.null(center) && is.null(ORDpoly)) {
+    stop("make_area_prey: provide either ORDpoly or center to define the zone.")
+  }
 
-  ord_union <- sf::st_union(ORDpoly)
-  inner <- sf::st_buffer(ord_union, dist = min_distance)
-  outer <- sf::st_buffer(ord_union, dist = max_distance)
-  ring  <- sf::st_difference(outer, inner)
+  base_geom <- if (!is.null(center)) sf::st_geometry(center) else sf::st_union(ORDpoly)
+  outer <- sf::st_buffer(base_geom, dist = max_distance)
+  zone  <- if (min_distance > 0) sf::st_difference(outer, sf::st_buffer(base_geom, min_distance)) else outer
 
-  ring_r <- raster::rasterize(sf::as_Spatial(ring), seamask, field = 1)
-  ring_cells <- which(!is.na(raster::values(ring_r)))
+  zone_r <- raster::rasterize(sf::as_Spatial(zone), seamask, field = 1)
+  zone_cells <- which(!is.na(raster::values(zone_r)))
   sea_cells  <- which(raster::values(seamask) == 0)
-  target_cells <- intersect(ring_cells, sea_cells)
+  target_cells <- intersect(zone_cells, sea_cells)
 
   if (reachable_only) {
     brd_v <- raster::values(BrdData)
@@ -376,10 +388,23 @@ make_area_prey <- function(seamask, ORDpoly,
   v[target_cells] <- inj$multiplier
   raster::values(PreyMap) <- v
 
-  message(sprintf("Area enrichment: %d cells in ring (reachable_only=%s), multiplier=%.2f.",
-                  length(target_cells), reachable_only, inj$multiplier))
+  # Optional EnergyMap: mark enriched cells with offal energy density (else NA
+  # -> species default in the model).
+  EnergyMap <- NULL
+  if (!is.null(offal_energy_density)) {
+    EnergyMap <- seamask
+    raster::values(EnergyMap) <- NA_real_
+    EnergyMap[target_cells] <- offal_energy_density
+    inj$offal_energy_density <- offal_energy_density
+    inj$cell_energy_kJ_offal <- inj$total_mass_g * offal_energy_density
+  }
 
-  list(PreyMap = PreyMap, target_cells = target_cells, ring = ring, injection = inj)
+  message(sprintf("Area enrichment: %d cells (reachable_only=%s), multiplier=%.2f%s.",
+                  length(target_cells), reachable_only, inj$multiplier,
+                  if (!is.null(offal_energy_density)) sprintf(", offal @ %.1f kJ/g", offal_energy_density) else ""))
+
+  list(PreyMap = PreyMap, EnergyMap = EnergyMap,
+       target_cells = target_cells, zone = zone, injection = inj)
 }
 
 

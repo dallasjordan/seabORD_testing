@@ -34,62 +34,8 @@
 ## ---------------------------------------------------------------------------
 ################################################################################
 
-# --- Make sure the real user library (where seabORD is installed) is reachable,
-#     even if this project's renv .Rprofile activated an empty renv library. ---
-.libPaths(c("C:/Users/dallas.jordan/AppData/Local/R/win-library/4.6", .libPaths()))
-
-suppressPackageStartupMessages({
-  library(seabORD)
-  library(raster)
-  library(sf)
-  library(dplyr)
-  library(purrr)
-  library(tibble)
-})
-
-setwd("C:/Users/dallas.jordan/OneDrive - SLR Consulting/Projects/seabORD_testing")
-source("experiments/transect_helpers.R")
-source("experiments/windfarms.R")
-
-dir.create("outputs", showWarnings = FALSE)
-
-# =============================================================================
-# 1. Load inputs
-# =============================================================================
-data("example_1_lists",           package = "seabORD")
-data("seamask_3035_example",      package = "seabORD")
-data("BrdData_example",           package = "seabORD")
-data("frgcompdata_example",       package = "seabORD")
-data("UK9004171_bysea_3035",      package = "seabORD")
-data("FlightGridcorrection_3035", package = "seabORD")
-data("energeticsandpreydata",     package = "seabORD")
-data("spacoordinates",            package = "seabORD")
-data("spalist",                   package = "seabORD")
-
-rebuild_raster <- function(rlist, name = NULL) {
-  md <- rlist$metadata
-  r <- raster::setValues(
-    raster::raster(nrows = md[["n_rows"]], ncols = md[["n_cols"]],
-                   xmn = md[["x_min"]], xmx = md[["x_max"]],
-                   ymn = md[["y_min"]], ymx = md[["y_max"]], crs = md[["crs"]]),
-    rlist$matrix)
-  if (!is.null(name)) names(r) <- name
-  r
-}
-
-SPA_CODE <- "UK9004171"
-
-seamask      <- rebuild_raster(seamask_3035_example, "seamask_3035")
-BrdData      <- rebuild_raster(BrdData_example,      "Forth.Islands")
-FrgCompData  <- rebuild_raster(frgcompdata_example,  "Forth.Islands")
-fltdist_base <- raster::brick(rebuild_raster(UK9004171_bysea_3035, SPA_CODE))
-spadat1      <- tibble::as_tibble(dplyr::filter(spacoordinates, SITECODE  == SPA_CODE))
-spadat2      <- tibble::as_tibble(dplyr::filter(spalist,         SITE_CODE == SPA_CODE))
-spdat        <- dplyr::filter(energeticsandpreydata, Code == "KI")
-FlightGridcorrection <- FlightGridcorrection_3035
-
-# BrdData is stored keyed by "colony_species"; seabord looks it up by that name.
-names(BrdData) <- paste(SPA_CODE, "KI", sep = "_")
+# --- Shared setup: inputs, helpers, base parameter lists, calibrated Pmedian ---
+source("experiments/_setup_inputs.R")
 
 # =============================================================================
 # 2. Windfarms -> ORDpoly + matching include_ORDs
@@ -99,7 +45,7 @@ names(BrdData) <- paste(SPA_CODE, "KI", sep = "_")
 WINDFARMS <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = TRUE)
 
 wf <- load_windfarms(
-  "data/ShapefilesForSeabORD/WindfarmsForSeabORD.shp",
+  WINDFARM_SHP,
   target_crs = raster::crs(seamask),
   include    = names(WINDFARMS)[WINDFARMS]   # only the ones toggled TRUE
 )
@@ -109,18 +55,15 @@ cat("Windfarms present:", paste(wf$include_ORDs, collapse = ", "), "\n")
 # =============================================================================
 # 3. Parameters
 # =============================================================================
-Par      <- example_1_lists$Par
-modPar   <- example_1_lists$modPar
-ordPar   <- example_1_lists$ordPar
-switches <- example_1_lists$switches
+# Par / modPar / ordPar / switches come from _setup_inputs.R.
 
 # Export per-bird foraging destinations (one row per bird per timestep).
 switches$saveperbirddest <- TRUE
 
 # --- Experiment knobs ---
-POP_FRACTION  <- 0.05    # 5% of the Isle of May kittiwake population, for speed
-N_REPLICATES  <- 3       # small for a quick look; bump to >= 20 for real inference
-FIXED_PMEDIAN <- 158     # g/cell baseline prey (fixed so injection is deterministic)
+POP_FRACTION  <- 0.05                # 5% of the Isle of May kittiwake population, for speed
+N_REPLICATES  <- 3                   # small for a quick look; bump to >= 20 for real inference
+FIXED_PMEDIAN <- CALIBRATED_PMEDIAN  # calibrated baseline prey (176; from experiment 03)
 
 # --- Offal knobs (edit these) ---
 OFFAL_KG       <- 2000   # biomass of offal dumped in the enriched cell

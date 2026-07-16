@@ -437,6 +437,23 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
       Par$Prob_Barrier
     )
 
+    # Per-bird offal access: flag an exact fraction of birds (Par$OffalAccessFrac)
+    # that forage on offal on EVERY trip, regardless of destination. These birds
+    # get Par$OffalBiomass_g of prey at Par$OffalEnergyDensity kJ/g each timestep
+    # (applied in seabord_daystep). Assignment is fixed for the season pair and
+    # reproducible from the run seed.
+    BirdType$data$offal_access <- FALSE
+    if (!is.null(Par$OffalAccessFrac) && Par$OffalAccessFrac > 0) {
+      set.seed(seedmat[2, paste0("run", simrun), drop = TRUE] + 777L)
+      n_oa <- round(nrow(BirdType$data) * Par$OffalAccessFrac)
+      oa_ids <- sample(BirdType$data$BirdID, size = n_oa)
+      BirdType$data$offal_access <- BirdType$data$BirdID %in% oa_ids
+      if (!switches$silent) {
+        print.noquote(paste0("Offal access: ", n_oa, " of ", nrow(BirdType$data),
+                             " birds (", round(100*Par$OffalAccessFrac), "%) forage on offal every trip"))
+      }
+    }
+
     #> Flight destinations
 
     # Get the list of default forage locations for this pair
@@ -726,7 +743,9 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                                          Opt_BM_chick = Opt_BM_chick,
                                          base_grid = base_grid,
                                          fixedVals = fixedVals,
-                                         EnergyMap = EnergyMapAligned)
+                                         EnergyMap = EnergyMapAligned,
+                                         offal_biomass_g = Par$OffalBiomass_g,
+                                         offal_energy_density = Par$OffalEnergyDensity)
 
           # Setting dead chicks to NA at the end of the season so that those that died on day 30 are recorded
           # correctly for individual plotting purposes:

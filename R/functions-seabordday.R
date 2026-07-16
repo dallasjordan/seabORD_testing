@@ -29,7 +29,8 @@
 seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
                             TodaysFlights, TodaysForageComp, PreyAvailable,
                             BirdType, BirdState, ChickState, Opt_BM_chick,
-                            base_grid, fixedVals, EnergyMap = NULL) {
+                            base_grid, fixedVals, EnergyMap = NULL,
+                            offal_biomass_g = NULL, offal_energy_density = NULL) {
 
 
     # clearing chick state at the start of the day for dead birds
@@ -121,6 +122,18 @@ seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
                   } else ki_energy))
     } else {
         BirdState$data <- BirdState$data %>% dplyr::mutate(E_dens = ki_energy)
+    }
+
+    #> Per-bird offal access: birds flagged in BirdType$data$offal_access forage
+    # on offal on every trip -- override their prey (Prey0) and energy density
+    # (E_dens) regardless of where they were sent. This decouples the treatment
+    # from geography (a fixed % of the population always accesses offal).
+    if (!is.null(offal_biomass_g) && "offal_access" %in% names(BirdType$data)) {
+        oa <- BirdType$data$offal_access[match(BirdState$data$BirdID, BirdType$data$BirdID)]
+        oa[is.na(oa)] <- FALSE
+        sel <- oa & (BirdState$data$is_alive > 0)
+        BirdState$data$Prey0[sel] <- offal_biomass_g
+        if (!is.null(offal_energy_density)) BirdState$data$E_dens[sel] <- offal_energy_density
     }
 
     # Grams needed to meet the energy requirement, using the destination's

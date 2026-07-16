@@ -105,9 +105,17 @@ print_injection <- function(inj) {
   cat(sprintf("Biomass added (total)  : %s g  = %s kg\n",
               format(round(inj$total_mass_g), big.mark=","),
               format(round(inj$total_mass_kg), big.mark=",")))
-  cat(sprintf("Model energy density   : %.2f kJ/g  (spdat$energy_prey)\n", inj$energy_prey_model))
-  cat(sprintf("=> Model-realised energy if fully eaten: %s kJ\n",
-              format(round(inj$total_kJ_model), big.mark=",")))
+  cat(sprintf("Default energy density : %.2f kJ/g  (spdat$energy_prey, rest of sea)\n", inj$energy_prey_model))
+  if (!is.null(inj$offal_energy_density)) {
+    # Offal cell overrides the default via the EnergyMap.
+    cat(sprintf("Offal energy density   : %.2f kJ/g  (EnergyMap override IN THIS CELL)\n",
+                inj$offal_energy_density))
+    cat(sprintf("=> Energy available in the offal cell: %s kJ  (biomass * offal density)\n",
+                format(round(inj$cell_energy_kJ_offal), big.mark=",")))
+  } else {
+    cat(sprintf("=> Energy available if fully eaten: %s kJ  (biomass * default density)\n",
+                format(round(inj$total_kJ_model), big.mark=",")))
+  }
   if (!is.na(inj$user_energy_density)) {
     cat(sprintf("Your assumed density   : %.2f kJ/g\n", inj$user_energy_density))
     cat(sprintf("=> Your-accounting energy: %s kJ\n",

@@ -92,14 +92,19 @@ FlightGridcorrection <- FlightGridcorrection_3035
 names(BrdData) <- paste(SPA_CODE, "KI", sep = "_")
 
 # =============================================================================
-# 2. Windfarms (all 4, incl. Berwick Bank) -> ORDpoly + matching include_ORDs
+# 2. Windfarms -> ORDpoly + matching include_ORDs
 # =============================================================================
+# Toggle which windfarms are present. Set a name to FALSE to exclude it
+# (e.g. BERWICK = FALSE to run without the not-yet-built Berwick Bank).
+WINDFARMS <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = TRUE)
+
 wf <- load_windfarms(
   "data/ShapefilesForSeabORD/WindfarmsForSeabORD.shp",
   target_crs = raster::crs(seamask),
-  include    = c("INCAP", "SEAGREEN", "NEART", "BERWICK")   # BERWICK = not yet built
+  include    = names(WINDFARMS)[WINDFARMS]   # only the ones toggled TRUE
 )
 ORDpoly <- wf$ORDpoly
+cat("Windfarms present:", paste(wf$include_ORDs, collapse = ", "), "\n")
 
 # =============================================================================
 # 3. Parameters
@@ -120,13 +125,25 @@ FIXED_PMEDIAN <- 158     # g/cell baseline prey (fixed so injection is determini
 # --- Offal knobs (edit these) ---
 OFFAL_KG       <- 2000   # biomass of offal dumped in the enriched cell
 OFFAL_KJ_PER_G <- 9      # energy density of offal AS AVAILABLE TO KITTIWAKES (kJ/g).
-                         # Birds foraging in this cell extract 9 kJ per gram here,
-                         # vs the species default (6.52 kJ/g) everywhere else.
+                         # Birds foraging on offal extract 9 kJ per gram,
+                         # vs the species default (6.52 kJ/g) on natural prey.
                          # => cell energy availability = 2000 kg * 9 kJ/g = 18,000,000 kJ.
+
+# --- Per-bird offal access (decoupled from geography) ---
+# A fixed fraction of birds forage on offal on EVERY trip, no matter where
+# BrdData sends them. This is the mechanism to use to guarantee that e.g. 47% of
+# the population accesses offal (unlike a spatial cell, which few birds reach).
+# Controlled per-scenario in section 6; set the fraction here.
+OFFAL_ACCESS_FRAC <- 0.47   # e.g. 0.47 = 47% of birds; used by the 'offal_access' scenario
 
 Par$Nscalefactor <- POP_FRACTION
 Par$Pmedian      <- rep(FIXED_PMEDIAN, N_REPLICATES)   # length must equal Nreplicates
 modPar$Nreplicates <- N_REPLICATES
+
+# Offal quality/quantity available to an offal-accessing bird each trip.
+# (OffalAccessFrac is set per-scenario in run_one below.)
+Par$OffalBiomass_g     <- OFFAL_KG * 1000     # grams available per trip (>> saturation = reliable)
+Par$OffalEnergyDensity <- OFFAL_KJ_PER_G      # kJ/g the accessing birds extract
 
 # ORDs: the include_ORDs vector MUST match ORDpoly row-for-row (positional).
 ordPar$include_ORDs <- wf$include_ORDs
@@ -156,7 +173,8 @@ point_res <- make_point_prey(
   max_distance      = 40000,
   target_mass_g        = OFFAL_KG * 1000,      # biomass of offal dumped (grams)
   offal_energy_density = OFFAL_KJ_PER_G        # offal quality (kJ/g) in this cell
-  # location = c(3600000, 3760000)             # <- uncomment to pin an exact cell
+  # location = c(3600000, 3760000)             # <- uncomment to pin an exact cell;
+                                               # x = 3542466 and y = 3740659 is a good one as it is most visited location
 )
 PreyMap_enriched   <- point_res$PreyMap
 EnergyMap_enriched <- point_res$EnergyMap
@@ -196,15 +214,22 @@ saveRDS(point_res, "outputs/point_enrichment_geometry.rds")
 # =============================================================================
 # 6. Run the two scenarios (same seed, same windfarms; only prey differs)
 # =============================================================================
+# Each scenario sets its own prey maps and offal-access fraction. Comment out
+# any you don't want to run.
 scenarios <- list(
-  baseline = list(PreyMap = NULL,             EnergyMap = NULL),               # uniform
-  enriched = list(PreyMap = PreyMap_enriched, EnergyMap = EnergyMap_enriched)  # offal cell
+  # Control: uniform prey, no offal at all
+  baseline     = list(PreyMap = NULL,             EnergyMap = NULL,               OffalAccessFrac = 0),
+  # Spatial: one offal cell outside the windfarms (reached by ~0.04% of trips)
+  enriched     = list(PreyMap = PreyMap_enriched, EnergyMap = EnergyMap_enriched, OffalAccessFrac = 0),
+  # Per-bird: a fixed % of birds forage on offal every trip (geography-independent)
+  offal_access = list(PreyMap = NULL,             EnergyMap = NULL,               OffalAccessFrac = OFFAL_ACCESS_FRAC)
 )
 
 run_one <- function(sc, label) {
   message("=== Running scenario: ", label, " ===")
   Par_i <- Par
-  Par_i$PreyType <- if (is.null(sc$PreyMap)) "Uniform" else "Map"
+  Par_i$PreyType       <- if (is.null(sc$PreyMap)) "Uniform" else "Map"
+  Par_i$OffalAccessFrac <- sc$OffalAccessFrac    # 0 disables the per-bird override
   t0 <- Sys.time()
   res <- seabord(
     Par = Par_i, modPar = modPar, ordPar = ordPar, switches = switches,

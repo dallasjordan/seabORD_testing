@@ -29,6 +29,11 @@
 #'   `Par$Pmedian[simrun]` each season). If `NULL` (default), prey is uniform
 #'   across all sea cells, reproducing previous behaviour. `Par$PreyType`
 #'   should be set to `"Map"` when supplying a `PreyMap`, `"Uniform"` otherwise.
+#' @param EnergyMap Optional RasterLayer giving the prey energy density (kJ per
+#'   gram) per cell. Where a cell has a value, birds foraging there gain that
+#'   many kJ per gram caught (and need correspondingly fewer grams to meet their
+#'   energy requirement) -- e.g. a cell of dumped offal at 9 kJ/g. Cells that are
+#'   NA, and the default `NULL`, fall back to the species value `spdat$energy_prey`.
 #'
 #' @importFrom raster ncol nrow raster calc cellStats crs extent ncell projectRaster values
 #' @importFrom stats sd
@@ -43,7 +48,7 @@
 #' @export
 seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                     spdat, BrdData, FrgCompData, fltdist_base,
-                    FlightGridcorrection, ORDpoly, PreyMap = NULL) {
+                    FlightGridcorrection, ORDpoly, PreyMap = NULL, EnergyMap = NULL) {
 
   ##============================================================================
   ## SECTION -- Switches and internals values --
@@ -163,14 +168,38 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
   Colony$metadata <- bind_rows(Colony$metadata, newmeta) %>% dplyr::distinct()
 
   # > Create 'PreyAvailable_rel', the base prey map; actual values set per season.
-  # If PreyMap is supplied, use it as the relative spatial prey distribution
-  # (reprojected to the seamask grid and masked to sea cells).
+  # If PreyMap is supplied, use it as the relative spatial prey distribution.
   # Otherwise default to uniform: 1 in every sea cell.
   if (!is.null(PreyMap)) {
-    PreyAvailable_rel <- projectRaster(PreyMap, to = seamask)
+    # If PreyMap already sits on the seamask grid, use it as-is. Reprojecting an
+    # already-aligned raster with bilinear interpolation can smear a sharp
+    # single-cell prey spike into its neighbours, so only reproject when the
+    # grids genuinely differ.
+    if (isTRUE(raster::compareRaster(PreyMap, seamask,
+                                     extent = TRUE, rowcol = TRUE, crs = TRUE,
+                                     res = TRUE, stopiffalse = FALSE))) {
+      PreyAvailable_rel <- PreyMap
+    } else {
+      PreyAvailable_rel <- projectRaster(PreyMap, to = seamask)
+    }
     PreyAvailable_rel[is.na(seamask)] <- NA
   } else {
     PreyAvailable_rel <- calc(seamask, fun = function(x) {x[x == 0] <- 1; return(x)})
+  }
+
+  # > Prey energy density (kJ/g) per cell. NULL -> uniform species value applied
+  # inside seabord_daystep. If supplied, align to the seamask grid (using it
+  # directly when already aligned, to keep sharp per-cell values exact).
+  if (!is.null(EnergyMap)) {
+    if (isTRUE(raster::compareRaster(EnergyMap, seamask,
+                                     extent = TRUE, rowcol = TRUE, crs = TRUE,
+                                     res = TRUE, stopiffalse = FALSE))) {
+      EnergyMapAligned <- EnergyMap
+    } else {
+      EnergyMapAligned <- projectRaster(EnergyMap, to = seamask)
+    }
+  } else {
+    EnergyMapAligned <- NULL
   }
 
   #-----------------------------------------------------------------------------
@@ -287,6 +316,11 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
 
   # Summary of all chicks at the end of the season
   output_y0 <- create_yearsheet(bycol = switches$bycol, bysus = switches$bysus)
+
+  # Per-bird foraging destinations (one row per bird per timestep). Only
+  # captured when switches$saveperbirddest is TRUE, as it can be large for
+  # full-population runs. Returned as SeabORDSummary$output_dest.
+  perbird_dest <- list()
 
   # Summarise all birds together - regional output
   output_i0 <- create_summarylist(bycol = switches$bycol, byi = FALSE, byall = FALSE)
@@ -658,6 +692,22 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                                  by = list(c=TodaysFlights$Destination), FUN=sum)
           BirdFlightMap[i$c] <- BirdFlightMap[i$c] + i$x
 
+          # Record per-bird foraging destinations for export (optional)
+          if (isTRUE(switches$saveperbirddest)) {
+            perbird_dest[[length(perbird_dest) + 1L]] <- tibble::tibble(
+              Rep         = simrun,
+              Season      = season,
+              t           = tstep,
+              BirdID      = TodaysFlights$BirdID,
+              colony      = TodaysFlights$colony,
+              wfde        = TodaysFlights$wfde,
+              wfbe        = TodaysFlights$wfbe,
+              FirstChoice = TodaysFlights$FirstChoice,
+              Destination = TodaysFlights$Destination,
+              Displaced   = TodaysFlights$Displaced,
+              ActualKm    = TodaysFlights$ActualKm)
+          }
+
           # Todays competition map
           TodaysForageComp <- base_grid
           values(TodaysForageComp) <- ForageComp[[season]][,tstep]
@@ -675,7 +725,8 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
                                          ChickState = ChickState,
                                          Opt_BM_chick = Opt_BM_chick,
                                          base_grid = base_grid,
-                                         fixedVals = fixedVals)
+                                         fixedVals = fixedVals,
+                                         EnergyMap = EnergyMapAligned)
 
           # Setting dead chicks to NA at the end of the season so that those that died on day 30 are recorded
           # correctly for individual plotting purposes:
@@ -945,6 +996,19 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
 
   } #<-- (next simrun) or end of duplicate pairs --------------------------------<
 
+  # Assemble per-bird destinations and attach cell-centre coordinates (EPSG:3035)
+  # for the intended (FirstChoice) and actual (Destination) foraging cells.
+  perbird_dest_df <- NULL
+  if (isTRUE(switches$saveperbirddest) && length(perbird_dest) > 0) {
+    perbird_dest_df <- dplyr::bind_rows(perbird_dest)
+    dxy <- raster::xyFromCell(seamask, perbird_dest_df$Destination)
+    fxy <- raster::xyFromCell(seamask, perbird_dest_df$FirstChoice)
+    perbird_dest_df$dest_x  <- dxy[, 1]
+    perbird_dest_df$dest_y  <- dxy[, 2]
+    perbird_dest_df$first_x <- fxy[, 1]
+    perbird_dest_df$first_y <- fxy[, 2]
+  }
+
   ##============================================================================
   ## SECTION -- Summary Calculations -- EXPERIMENTAL
 
@@ -1089,6 +1153,9 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
     }
   }
 
+
+  # Attach the per-bird destinations (NULL unless switches$saveperbirddest = TRUE)
+  SeabORDSummary$output_dest <- perbird_dest_df
 
   ## Return the list
   return(SeabORDSummary)

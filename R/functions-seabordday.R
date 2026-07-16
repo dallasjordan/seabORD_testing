@@ -29,7 +29,7 @@
 seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
                             TodaysFlights, TodaysForageComp, PreyAvailable,
                             BirdType, BirdState, ChickState, Opt_BM_chick,
-                            base_grid, fixedVals) {
+                            base_grid, fixedVals, EnergyMap = NULL) {
 
 
     # clearing chick state at the start of the day for dead birds
@@ -84,15 +84,14 @@ seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
         dplyr::distinct()
 
     #> Total daily energy requirement per bird depending if it has a chick
+    # (Req_gram, the grams needed to meet this, is computed below once the
+    #  foraging destination -- and hence its prey energy density -- is known.)
     BirdState$data <- BirdState$data %>%
-        dplyr::select(!any_of(c("Ereq_total", "Req_gram"))) %>%
+        dplyr::select(!any_of(c("Ereq_total", "Req_gram", "E_dens"))) %>%
         dplyr::mutate(Ereq_total = purrr::pmap_dbl(list(
             feeding_mode, Ereq_adult, Ereq_chick, is_chick_alive),
             ~ ifelse((({..1} < 3) & ({..4} == 1)), {..2} + 0.5*{..3}, {..2})
-        )) %>%
-        # Food requirement is converted into grams using average energy
-        # density equations of prey (Harris et al. 2008)
-        dplyr::mutate(Req_gram = Ereq_total / Species$data$energy_prey)
+        ))
 
     # Update metadata
     BirdState$metadata <- bind_rows(BirdState$metadata, tidyr::tribble(
@@ -107,6 +106,28 @@ seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
         dplyr::left_join(TodaysFlights[c("BirdID", "Destination")], by = "BirdID") %>%
         dplyr::mutate(Prey0 = purrr::pmap_dbl(list(is_alive, Destination),
                                               ~ ifelse({..1}>0, PreyAvailable[{..2}], 0)))
+
+    #> Per-bird prey energy density (kJ/g) at the foraging destination.
+    # Default: the uniform species value. If an EnergyMap raster is supplied, a
+    # cell may have a different density (e.g. richer offal at 9 kJ/g); cells with
+    # NA in EnergyMap fall back to the species value.
+    ki_energy <- Species$data$energy_prey
+    if (!is.null(EnergyMap)) {
+        EnergyVec <- raster::values(EnergyMap)
+        BirdState$data <- BirdState$data %>%
+            dplyr::mutate(E_dens = purrr::pmap_dbl(list(is_alive, Destination),
+                ~ if ({..1} > 0) {
+                      e <- EnergyVec[{..2}]; if (is.na(e)) ki_energy else e
+                  } else ki_energy))
+    } else {
+        BirdState$data <- BirdState$data %>% dplyr::mutate(E_dens = ki_energy)
+    }
+
+    # Grams needed to meet the energy requirement, using the destination's
+    # energy density (a bird foraging on richer prey needs fewer grams).
+    # (Harris et al. 2008 for the baseline species density.)
+    BirdState$data <- BirdState$data %>%
+        dplyr::mutate(Req_gram = Ereq_total / E_dens)
 
     # Update metadata
     BirdState$metadata <- bind_rows(BirdState$metadata, tidyr::tribble(
@@ -203,9 +224,11 @@ seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
 
     #--> Calculate the allocation of food to adults and chicks ----------------->
 
-    # Convert grams caught to energy
+    # Convert grams caught to energy, using each bird's destination energy
+    # density (E_dens): the species value everywhere, or a richer value (e.g.
+    # offal at 9 kJ/g) in any cell flagged by EnergyMap.
     BirdState$data <- BirdState$data %>%
-        dplyr::mutate(E_caught = forage_g * Species$data$energy_prey)
+        dplyr::mutate(E_caught = forage_g * E_dens)
 
     # Apportion to the adult and the chick appropriately
     # Species$data$Adult_priority no longer set - fixing as 0 for now

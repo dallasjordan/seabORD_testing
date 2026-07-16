@@ -2,17 +2,22 @@
 ## Smoke test (FAST version): confirm seabord() runs with the new PreyMap arg.
 ##
 ## Runs two minimal scenarios on the example data, with a 2-day season for speed:
-##   1. baseline       -- PreyMap = NULL (existing uniform behaviour)
-##   2. spatial_random -- PreyMap = raster with 200 random sea cells at 2x
+##   1. baseline           -- PreyMap = NULL (existing uniform behaviour)
+##   2. spatial_transects  -- PreyMap built from 2 random sea-only transects
+##                            outside the windfarm
 ##
 ## On success, prints a short summary of each result.
 ################################################################################
-
+rm(list=ls())
+setwd("C:\\Users\\dallas.jordan\\OneDrive - SLR Consulting\\Projects\\seabORD_testing\\")
 suppressPackageStartupMessages({
   library(seabORD)
   library(raster)
+  library(sf)
   library(dplyr)
 })
+
+source("experiments/transect_helpers.R")
 
 cat("seabORD version:", as.character(packageVersion("seabORD")), "\n")
 
@@ -80,19 +85,39 @@ cat("thisSpecies:", Par$thisSpecies, "| spdat rows:", nrow(spdat), "\n")
 cat("Nreplicates (modPar):", modPar$Nreplicates, "\n")
 
 # ----------------------------------------------------------------------------
-# 4. Build a simple spatial prey raster: uniform 1, with 200 random sea cells at 2.0
+# 4. Build the spatial PreyMap from 2 transects placed entirely over sea
 # ----------------------------------------------------------------------------
-# Correct sea-cell selector: in this seamask sea = 0, land = NaN.
-set.seed(42)
-sea_cells <- which(values(seamask) == 0)
-hotspot   <- sample(sea_cells, size = min(200, length(sea_cells)))
+transect_res <- make_transect_prey(
+  seamask       = seamask,
+  ORDpoly       = ORDpoly_example,
+  min_distance  = 20000,
+  max_distance  = 40000,
+  n_transects   = 2,        # smoke-test size
+  length_m      = 8000,
+  width_m       = 1000,
+  multiplier    = 2.0,
+  sea_only      = TRUE,     # reject any transect that touches a land cell
+  Pmedian_value = Par$Pmedian[1],
+  energy_prey   = spdat$energy_prey,
+  seed          = 42
+)
+PreyMap_spatial <- transect_res$PreyMap
 
-PreyMap_spatial <- calc(seamask, fun = function(x) { x[x == 0] <- 1; x })
-vals <- values(PreyMap_spatial)
-vals[hotspot] <- vals[hotspot] * 2.0
-values(PreyMap_spatial) <- vals
+# Visualise the resulting PreyMap with windfarm + transects overlaid.
+plot_preymap(transect_res$PreyMap, ORDpoly,
+             transects = transect_res$transects,
+             ring      = transect_res$ring,
+             file      = "outputs/preymap_transects.png",
+             title     = sprintf("Transect prey enrichment (+%.0f kJ injected)",
+                                 transect_res$energy_summary$total_extra_kJ))
 
-cat("Spatial PreyMap built: hotspots in", length(hotspot), "cells (2x relative)\n\n")
+cat("Spatial PreyMap built: transects =", length(transect_res$transects),
+    "| target cells =", length(transect_res$target_cells), "\n")
+if (!is.null(transect_res$energy_summary)) {
+  cat(sprintf("Energy injected: +%.0f g of prey  (=  +%.0f kJ)\n\n",
+              transect_res$energy_summary$total_extra_mass_g,
+              transect_res$energy_summary$total_extra_kJ))
+}
 
 # ----------------------------------------------------------------------------
 # 5. Helper: run one scenario
@@ -132,8 +157,65 @@ run_scenario <- function(label, PreyType, PreyMap) {
 # ----------------------------------------------------------------------------
 # 6. Run both scenarios
 # ----------------------------------------------------------------------------
-res_baseline <- run_scenario("baseline",       PreyType = "Uniform", PreyMap = NULL)
-res_spatial  <- run_scenario("spatial_random", PreyType = "Map",     PreyMap = PreyMap_spatial)
+res_baseline <- run_scenario("baseline",          PreyType = "Uniform", PreyMap = NULL)
+res_spatial  <- run_scenario("spatial_transects", PreyType = "Map",     PreyMap = PreyMap_spatial)
+
+# ----------------------------------------------------------------------------
+# 7. Outputs
+# ----------------------------------------------------------------------------
+# Baseline
+adults_all   <- dplyr::bind_rows(res_baseline$output_a0)
+chicks_all   <- dplyr::bind_rows(res_baseline$output_c0)
+yearly_all   <- dplyr::bind_rows(res_baseline$output_y0)
+
+dplyr::glimpse(adults_all)
+dplyr::glimpse(yearly_all)
+
+# Adult survival — proportion alive at end of season
+end_of_season <- res_baseline$output_a0[[length(res_baseline$output_a0)]]
+mean(end_of_season$is_alive, na.rm = TRUE)
+
+# Or across all recorded steps:
+adults_all %>%
+  dplyr::group_by(simrun, season, tstep) %>%
+  dplyr::summarise(survival = mean(is_alive, na.rm = TRUE), .groups = "drop")
+
+# Adult body-mass distribution at end of season
+summary(end_of_season$BM_adult)
+hist(end_of_season$BM_adult, main = "End-of-season adult body mass")
+
+# Chick survival / fledging
+end_chicks <- res_baseline$output_c0[[length(res_baseline$output_c0)]]
+mean(end_chicks$is_alive, na.rm = TRUE)
+
+# Yearly summary already aggregates per simrun/season
+yearly_all
+
+# Baseline vs. Spatial
+compare %>%
+  dplyr::filter(Season == "scen") %>%
+  dplyr::select(scenario, Rep, BM_adult.mn, BM_condition.mn, forage_g.mn)
+
+compare %>%
+  dplyr::group_by(scenario) %>%
+  dplyr::summarise(
+    forage_drop = forage_g.mn[Season == "scen"] - forage_g.mn[Season == "base"],
+    bm_drop     = BM_adult.mn[Season == "scen"] - BM_adult.mn[Season == "base"]
+  )
+
+# Visualise flight paths
+# Compute the zoom extent from windfarm + transect geometries, with some padding
+bb <- sf::st_bbox(c(sf::st_geometry(ORDpoly),
+                    sf::st_geometry(transect_res$transects)))
+pad <- max(diff(bb[c("xmin","xmax")]), diff(bb[c("ymin","ymax")])) * 0.2
+zoom_ext <- raster::extent(bb["xmin"] - pad, bb["xmax"] + pad,
+                           bb["ymin"] - pad, bb["ymax"] + pad)
+
+# Crop and plot
+fm_zoom <- raster::crop(res_baseline$BirdFlightMap, zoom_ext)
+raster::plot(fm_zoom, main = "Bird flight density (zoomed)")
+plot(sf::st_geometry(ORDpoly),             add = TRUE, border = "black",     lwd = 2)
+plot(sf::st_geometry(transect_res$transects), add = TRUE, col = "darkgreen", lwd = 2)
 
 cat("=== SMOKE TEST DONE ===\n")
 cat("baseline OK:", !is.null(res_baseline), "\n")

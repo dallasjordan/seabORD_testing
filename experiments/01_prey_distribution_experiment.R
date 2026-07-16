@@ -21,6 +21,8 @@ library(dplyr)
 library(purrr)
 library(tibble)
 
+setwd("C:\\Users\\dallas.jordan\\OneDrive - SLR Consulting\\Projects\\seabORD_testing\\")
+
 # Load transect-building and PreyMap-plotting helpers
 source("experiments/transect_helpers.R")
 
@@ -149,17 +151,17 @@ random_cells      <- sample(sea_cells, size = min(200, length(sea_cells)))
 # Same layout used across all replicates of this scenario (see seed below).
 
 transect_res <- make_transect_prey(
-  seamask       = seamask,
-  ORDpoly       = ORDpoly,
-  min_distance  = 20000,   # transects begin >= 20 km outside windfarm
-  max_distance  = 40000,   # ... and <= 40 km out (keep within foraging range)
-  n_transects   = 10,
-  length_m      = 8000,    # 8 km transect lines
-  width_m       = 1000,    # 1 km corridor width
-  multiplier    = 2.0,
-  Pmedian_value = Par$Pmedian[1],   # base Pmedian for kJ accounting
-  energy_prey   = spdat$energy_prey,
-  seed          = 2026
+  seamask           = seamask,
+  ORDpoly           = ORDpoly,
+  Pmedian_value     = Par$Pmedian[1],       # base Pmedian for kJ accounting
+  energy_prey_model = spdat$energy_prey,    # model energy density (kJ/g)
+  min_distance      = 20000,   # transects begin >= 20 km outside windfarm
+  max_distance      = 40000,   # ... and <= 40 km out (keep within foraging range)
+  n_transects       = 10,
+  length_m          = 8000,    # 8 km transect lines
+  width_m           = 1000,    # 1 km corridor width
+  multiplier        = 2.0,
+  seed              = 2026
 )
 
 # Save the transect layout for later reference (the same seed will reproduce it,
@@ -169,11 +171,11 @@ saveRDS(transect_res, "outputs/transect_scenario_geometry.rds")
 
 # Visualise the resulting PreyMap with windfarm + transects overlaid.
 plot_preymap(transect_res$PreyMap, ORDpoly,
-             transects = transect_res$transects,
-             ring      = transect_res$ring,
-             file      = "outputs/preymap_transects.png",
-             title     = sprintf("Transect prey enrichment (+%.0f kJ injected)",
-                                 transect_res$energy_summary$total_extra_kJ))
+             features = transect_res$transects,
+             ring     = transect_res$ring,
+             file     = "outputs/preymap_transects.png",
+             title    = sprintf("Transect prey enrichment (+%.0f kJ injected)",
+                                transect_res$injection$total_kJ_model))
 
 
 # =============================================================================
@@ -218,7 +220,7 @@ scenarios <- list(
   ),
 
   # Random transect lines in a ring outside the windfarm (see section 4b).
-  # PreyMap was built above; injects ~`total_extra_kJ` extra kJ into the system.
+  # PreyMap was built above; injects ~`injection$total_kJ_model` extra kJ.
   spatial_transects_outside_ord = list(
     PreyType = "Map",
     PreyMap  = transect_res$PreyMap,

@@ -33,7 +33,11 @@ source("experiments/transect_helpers.R")
 source("experiments/windfarms.R")
 
 # ---- Calibrated baseline prey (experiment 03; moderate Isle of May conditions) ----
-CALIBRATED_PMEDIAN <- 176   # g/cell; re-run 03_calibrate_pmedian.R if inputs change
+# 175 g/cell: the only value in the refined 165-185 sweep with BOTH adult mass
+# loss (9-11%) and chicks/nest (0.45-0.55) inside their moderate bounds.
+# Chicks/nest is the binding constraint -- adult mass loss is satisfied across a
+# much wider prey range. Re-run 03_calibrate_pmedian.R if the inputs change.
+CALIBRATED_PMEDIAN <- 175   # g/cell
 
 # ---- Paths / codes ----
 SPA_CODE     <- "UK9004171"                                   # Forth Islands SPA

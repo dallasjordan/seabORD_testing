@@ -63,7 +63,7 @@ switches$saveperbirddest <- TRUE
 # --- Experiment knobs ---
 POP_FRACTION  <- 0.05                # 5% of the Isle of May kittiwake population, for speed
 N_REPLICATES  <- 3                   # small for a quick look; bump to >= 20 for real inference
-FIXED_PMEDIAN <- CALIBRATED_PMEDIAN  # calibrated baseline prey (176; from experiment 03)
+FIXED_PMEDIAN <- CALIBRATED_PMEDIAN  # calibrated baseline prey (from experiment 03)
 
 # --- Offal knobs (edit these) ---
 OFFAL_KG       <- 2000   # biomass of offal dumped in the enriched cell

@@ -137,18 +137,27 @@ both_ok <- cal_df %>%
                 ChicksPerNest >= PROD_LO, ChicksPerNest <= PROD_HI)
 
 cat("\n=== Calibrated Pmedian ===\n")
-cat(sprintf("Prey giving 10%% adult mass loss : %s\n",
+# Reference only: where each metric hits its EXACT target. Do NOT average these.
+# The two metrics have very different slopes -- adult mass loss is shallow and
+# stays in bounds across a wide prey range, while chicks per nest is steep and
+# only in bounds over a narrow window. Averaging the two crossings can land on a
+# prey value where the steep metric is already out of bounds.
+cat(sprintf("  (ref) prey at exactly 10%% adult mass loss : %s\n",
             ifelse(is.na(prey_mass), "outside swept range", sprintf("%.0f g/cell", prey_mass))))
-cat(sprintf("Prey giving 0.50 chicks/nest    : %s\n",
+cat(sprintf("  (ref) prey at exactly 0.50 chicks/nest    : %s\n",
             ifelse(is.na(prey_prod), "outside swept range", sprintf("%.0f g/cell", prey_prod))))
-if (!is.na(prey_mass) && !is.na(prey_prod)) {
-  cat(sprintf("=> Suggested Pmedian (midpoint) : %.0f g/cell\n", mean(c(prey_mass, prey_prod))))
-}
+
+# THE calibration criterion (per the F vignette): the prey value(s) where BOTH
+# metrics sit inside their moderate bounds.
 if (nrow(both_ok) > 0) {
-  cat("Prey values inside BOTH moderate bounds:", paste(both_ok$Prey, collapse = ", "), "\n")
+  cat(sprintf("\n=> CALIBRATED Pmedian: %s g/cell\n",
+              paste(both_ok$Prey, collapse = ", ")))
+  cat("   (prey value(s) with BOTH adult mass loss AND chicks/nest inside their bounds)\n")
+  cat("   Set CALIBRATED_PMEDIAN in experiments/_setup_inputs.R to this value.\n")
 } else {
-  cat("(No single swept value fell inside both bounds -- use the interpolated midpoint,\n")
-  cat(" or refine the sweep around it and re-run.)\n")
+  cat("\n=> No swept value fell inside BOTH bounds.\n")
+  cat("   Refine the sweep around where the steeper metric (chicks/nest) crosses\n")
+  cat("   its target and re-run -- do not average the two reference values above.\n")
 }
 
 # =============================================================================

@@ -145,9 +145,12 @@ print_injection <- function(inj) {
 # Example (dump 2000 kg of offal at 9 kJ/g):
 #   make_point_prey(..., target_mass_g = 2000*1000, offal_energy_density = 9)
 # ------------------------------------------------------------------------------
-make_point_prey <- function(seamask, ORDpoly,
+# `center` (an sf point, e.g. the colony) replaces the windfarm as the centre of
+# the search zone; use min_distance = 0 for a solid disc of radius max_distance.
+make_point_prey <- function(seamask, ORDpoly = NULL,
                             Pmedian_value, energy_prey_model,
                             location = NULL,
+                            center = NULL,
                             BrdData = NULL,
                             min_distance = 20000,
                             max_distance = 40000,
@@ -171,10 +174,13 @@ make_point_prey <- function(seamask, ORDpoly,
     if (is.null(BrdData)) {
       stop("make_point_prey: provide BrdData to auto-pick a reachable cell, or supply an explicit location.")
     }
-    ord_union <- sf::st_union(ORDpoly)
-    inner <- sf::st_buffer(ord_union, dist = min_distance)
-    outer <- sf::st_buffer(ord_union, dist = max_distance)
-    ring  <- sf::st_difference(outer, inner)
+    if (is.null(center) && is.null(ORDpoly)) {
+      stop("make_point_prey: provide either ORDpoly or center to define the search zone.")
+    }
+    base_geom <- if (!is.null(center)) sf::st_geometry(center) else sf::st_union(ORDpoly)
+    outer <- sf::st_buffer(base_geom, dist = max_distance)
+    ring  <- if (min_distance > 0)
+               sf::st_difference(outer, sf::st_buffer(base_geom, dist = min_distance)) else outer
     ring_r <- raster::rasterize(sf::as_Spatial(ring), seamask, field = 1)
     ring_cells <- which(!is.na(raster::values(ring_r)))
 

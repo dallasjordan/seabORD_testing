@@ -124,11 +124,17 @@ seabord_daystep <- function(Species, Nscalefactor, popbirdsperkm2, TimeVals,
         BirdState$data <- BirdState$data %>% dplyr::mutate(E_dens = ki_energy)
     }
 
-    #> Per-bird offal access: birds flagged in BirdType$data$offal_access forage
-    # on offal on every trip -- override their prey (Prey0) and energy density
-    # (E_dens) regardless of where they were sent. This decouples the treatment
-    # from geography (a fixed % of the population always accesses offal).
-    if (!is.null(offal_biomass_g) && "offal_access" %in% names(BirdType$data)) {
+    #> Per-bird offal access (geography-free variant): birds flagged in
+    # BirdType$data$offal_access forage on offal on every trip -- override their
+    # prey (Prey0) and energy density (E_dens) wherever they were sent.
+    #
+    # Only applies when offal_biomass_g > 0. The alternative mechanism
+    # (Par$OffalCell) instead sends those birds to a real offal cell, where they
+    # pick up its PreyMap/EnergyMap values naturally -- in that case
+    # offal_biomass_g is 0 and this override must NOT fire, or it would set their
+    # Prey0 to 0 and starve them.
+    if (!is.null(offal_biomass_g) && offal_biomass_g > 0 &&
+        "offal_access" %in% names(BirdType$data)) {
         oa <- BirdType$data$offal_access[match(BirdState$data$BirdID, BirdType$data$BirdID)]
         oa[is.na(oa)] <- FALSE
         sel <- oa & (BirdState$data$is_alive > 0)

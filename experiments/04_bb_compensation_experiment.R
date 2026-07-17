@@ -47,6 +47,23 @@ N_REPLICATES <- N_REPLICATES_BASELINE
 
 OFFAL_KJ_PER_G <- 9      # offal quality (kJ/g available to kittiwakes)
 
+# --- Which analyses to run (toggle off the ones you don't need) ---------------
+RUN_BASELINES  <- TRUE    # stage 1: without_BB vs with_BB  (the reportable BB impact)
+RUN_OFFAL_CELL <- TRUE    # stage 2c: offal cell near colony, birds FLY to it  <- main scenario
+RUN_SPATIAL    <- FALSE   # stage 2a: offal spread near colony, found randomly
+RUN_PERBIRD    <- FALSE   # stage 2b: offal wherever birds forage (no travel effect)
+
+# --- Displacement: NatureScot guidance ---------------------------------------
+# 30% displacement, and a 2 km buffer around the windfarm footprint within which
+# birds are considered displaced (ordPar$FootprintBorder).
+# NOTE: the example default was 60% displacement -- a demo value, not guidance.
+Par$Prob_Displacement <- 0.30
+ordPar$FootprintBorder <- 2      # km, footprint + 2 km = the displacement zone
+# Prob_Barrier is the share of DISPLACED birds that also detour around the farm.
+# Left at the example default; set explicitly if your guidance specifies it.
+cat(sprintf("Displacement: %.0f%% of birds | barrier: %.0f%% of those | footprint buffer: %g km\n",
+            100*Par$Prob_Displacement, 100*Par$Prob_Barrier, ordPar$FootprintBorder))
+
 # Windfarm configurations (positional toggles resolved by load_windfarms)
 WF_WITHOUT_BB <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = FALSE)
 WF_WITH_BB    <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = TRUE)
@@ -63,6 +80,19 @@ PERBIRD_OFFAL_KG  <- c(0, 0.2, 0.5, 1, 2, 5)         # offal available per acces
 # NB: the intake half-saturation (IR_half_a) is 900 g, so this sweep deliberately
 # spans below and above saturation -- past ~2-3 kg birds simply max out their
 # intake and extra offal stops helping.
+
+# --- 2c. OFFAL CELL near the colony that birds FLY TO (the main scenario) ------
+# We dump offal in one cell near the Isle of May and OFFAL_CELL_ACCESS_FRAC of
+# adults forage there on every trip instead of their normal destination. Unlike
+# 3b, they really travel to that cell, so this also captures:
+#   - the shorter commute (flight is ~23% of daily energy at 4.7 h),
+#   - the fact that they no longer route past Berwick Bank, so displacement
+#     cannot touch them.
+# That makes it the realistic "dump site" scenario -- but note the compensation
+# it buys is offal energy PLUS avoided travel/displacement, not offal alone.
+OFFAL_CELL_ACCESS_FRAC <- 0.47   # share of adults that fly to the offal cell
+OFFAL_CELL_RADIUS_M    <- 20000  # search radius around the colony for the site
+OFFAL_CELL_KG          <- c(0, 0.2, 0.5, 1, 2, 5)   # offal in the cell (kg), swept
 
 colony_point <- COLONY_POINT   # from _setup_inputs.R
 
@@ -96,7 +126,7 @@ get_metrics <- function(res) {
 # Run one full configuration and return its metrics + a label row.
 run_config <- function(windfarms, label, mechanism, offal_amount,
                        PreyMap = NULL, EnergyMap = NULL,
-                       offal_frac = 0, offal_biomass_g = 0) {
+                       offal_frac = 0, offal_biomass_g = 0, offal_cell = NULL) {
   message(sprintf("--- %s (%s = %s) ---", label, mechanism, offal_amount))
   wf <- load_windfarms(WINDFARM_SHP, target_crs = raster::crs(seamask),
                        include = names(windfarms)[windfarms])
@@ -104,8 +134,9 @@ run_config <- function(windfarms, label, mechanism, offal_amount,
   Par_i$Nscalefactor       <- POP_FRACTION
   Par_i$Pmedian            <- rep(CALIBRATED_PMEDIAN, N_REPLICATES)
   Par_i$PreyType           <- if (is.null(PreyMap)) "Uniform" else "Map"
-  Par_i$OffalAccessFrac    <- offal_frac       # 0 = per-bird offal access off
-  Par_i$OffalBiomass_g     <- offal_biomass_g  # offal available per accessing bird per trip
+  Par_i$OffalAccessFrac    <- offal_frac       # 0 = no birds flagged for offal
+  Par_i$OffalBiomass_g     <- offal_biomass_g  # >0 = offal wherever they forage (2b)
+  Par_i$OffalCell          <- offal_cell       # non-NULL = fly to this cell (2c)
   Par_i$OffalEnergyDensity <- OFFAL_KJ_PER_G
   modPar_i <- modPar; modPar_i$Nreplicates <- N_REPLICATES
   ordPar_i <- ordPar; ordPar_i$include_ORDs <- wf$include_ORDs
@@ -142,27 +173,31 @@ save_progress <- function() {
 
 # =============================================================================
 # STAGE 1 (1 & 2). Baselines -- the reportable BB impact on survival AND
-# productivity. Run at high replication; this is the result you report.
+# productivity. Run at high replication to detect adult survival changes.
 # =============================================================================
-N_REPLICATES <- N_REPLICATES_BASELINE
-results$without_bb <- run_config(WF_WITHOUT_BB, "without_BB", "none", 0); save_progress()
-results$with_bb    <- run_config(WF_WITH_BB,    "with_BB",    "none", 0); save_progress()
+if (RUN_BASELINES) {
+  N_REPLICATES <- N_REPLICATES_BASELINE
+  results$without_bb <- run_config(WF_WITHOUT_BB, "without_BB", "none", 0); save_progress()
+  results$with_bb    <- run_config(WF_WITH_BB,    "with_BB",    "none", 0); save_progress()
+}
 
-target_surv <- results$without_bb$survival
-target_prod <- results$without_bb$productivity
-cat(sprintf("\nTARGET (without BB): annual survival=%.4f  mass loss=%.3f  productivity=%.4f\n",
-            target_surv, results$without_bb$mass_loss, target_prod))
-cat(sprintf("WITH BB           : annual survival=%.4f  mass loss=%.3f  productivity=%.4f\n",
-            results$with_bb$survival, results$with_bb$mass_loss, results$with_bb$productivity))
-cat(sprintf("BB's cost         : survival %+.4f   productivity %+.4f   (the gap to close)\n\n",
-            results$with_bb$survival - target_surv,
-            results$with_bb$productivity - target_prod))
+if (!is.null(results$without_bb)) {
+  target_surv <- results$without_bb$survival
+  target_prod <- results$without_bb$productivity
+  cat(sprintf("\nTARGET (without BB): annual survival=%.4f  mass loss=%.3f  productivity=%.4f\n",
+              target_surv, results$without_bb$mass_loss, target_prod))
+  cat(sprintf("WITH BB           : annual survival=%.4f  mass loss=%.3f  productivity=%.4f\n",
+              results$with_bb$survival, results$with_bb$mass_loss, results$with_bb$productivity))
+  cat(sprintf("BB's cost         : survival %+.4f   productivity %+.4f   (the gap to close)\n\n",
+              results$with_bb$survival - target_surv,
+              results$with_bb$productivity - target_prod))
+}
 
 # =============================================================================
 # STAGE 2 (3a). Spatial offal near the colony -- sweep biomass
 # =============================================================================
 N_REPLICATES <- N_REPLICATES_SWEEP   # productivity-driven; fewer reps suffice
-for (kg in SPATIAL_OFFAL_KG) {
+if (RUN_SPATIAL) for (kg in SPATIAL_OFFAL_KG) {
   if (kg == 0) { pm <- NULL; em <- NULL } else {
     area <- make_area_prey(
       seamask = seamask, center = colony_point,
@@ -179,21 +214,60 @@ for (kg in SPATIAL_OFFAL_KG) {
 }
 
 # =============================================================================
-# 3b. Offal cell fed on by a GUARANTEED share of birds -- sweep the offal AMOUNT
+# STAGE 2b. Offal wherever the birds already forage -- sweep the offal AMOUNT
 # =============================================================================
-# ACCESS_FRAC_FIXED (47%) of adults feed on the offal every trip, regardless of
-# where they would otherwise forage. We sweep how much offal is available to each
-# of them per trip, and find the amount that restores the WITHOUT_BB target.
-cat(sprintf("\n3b assumes %.0f%% of adults always feed on the offal; sweeping the amount.\n",
-            100 * ACCESS_FRAC_FIXED))
-for (kg in PERBIRD_OFFAL_KG) {
-  key <- paste0("perbird_", kg, "kg")
-  # kg = 0 means no offal at all -> switch access off so birds forage normally
-  # (rather than being sent to an empty offal source and starving).
-  fr <- if (kg == 0) 0 else ACCESS_FRAC_FIXED
-  results[[key]] <- run_config(WF_WITH_BB, key, "perbird_offal_kg", kg,
-                               offal_frac = fr, offal_biomass_g = kg * 1000)
-  save_progress()
+# ACCESS_FRAC_FIXED of adults feed on offal every trip, but they do NOT travel:
+# they forage where BrdData sends them and simply find offal there. This isolates
+# the FOOD effect (no change to flight cost or displacement exposure).
+if (RUN_PERBIRD) {
+  cat(sprintf("\n2b: %.0f%% of adults feed on offal where they already forage; sweeping the amount.\n",
+              100 * ACCESS_FRAC_FIXED))
+  for (kg in PERBIRD_OFFAL_KG) {
+    key <- paste0("perbird_", kg, "kg")
+    # kg = 0 means no offal at all -> switch access off so birds forage normally
+    # (rather than being sent to an empty offal source and starving).
+    fr <- if (kg == 0) 0 else ACCESS_FRAC_FIXED
+    results[[key]] <- run_config(WF_WITH_BB, key, "perbird_offal_kg", kg,
+                                 offal_frac = fr, offal_biomass_g = kg * 1000)
+    save_progress()
+  }
+}
+
+# =============================================================================
+# STAGE 2c. OFFAL CELL near the colony that birds FLY TO  <-- main scenario
+# =============================================================================
+# One cell near the Isle of May holds offal, and OFFAL_CELL_ACCESS_FRAC of adults
+# forage there every trip instead of their normal destination. They really travel
+# there, so this captures the offal energy AND the shorter commute AND the fact
+# that they no longer route past Berwick Bank (so displacement cannot touch them).
+if (RUN_OFFAL_CELL) {
+  cat(sprintf("\n2c: %.0f%% of adults fly to an offal cell near the colony; sweeping the amount.\n",
+              100 * OFFAL_CELL_ACCESS_FRAC))
+  for (kg in OFFAL_CELL_KG) {
+    key <- paste0("offalcell_", kg, "kg")
+    if (kg == 0) {
+      # No offal: nobody is sent anywhere -- a clean "with BB, no intervention" point.
+      results[[key]] <- run_config(WF_WITH_BB, key, "offalcell_kg", kg)
+    } else {
+      # Site the cell on the most-visited reachable sea cell within
+      # OFFAL_CELL_RADIUS_M of the colony, and load it with kg of offal at 9 kJ/g.
+      pt <- make_point_prey(
+        seamask = seamask, center = COLONY_POINT,
+        Pmedian_value = CALIBRATED_PMEDIAN, energy_prey_model = spdat$energy_prey,
+        BrdData = BrdData, min_distance = 0, max_distance = OFFAL_CELL_RADIUS_M,
+        target_mass_g = kg * 1000, offal_energy_density = OFFAL_KJ_PER_G)
+      results[[key]] <- run_config(
+        WF_WITH_BB, key, "offalcell_kg", kg,
+        PreyMap = pt$PreyMap, EnergyMap = pt$EnergyMap,
+        offal_frac = OFFAL_CELL_ACCESS_FRAC,
+        offal_biomass_g = 0,          # 0 -> use the CELL's prey, not a blanket override
+        offal_cell = pt$target_cell)  # birds are sent here every trip
+      if (kg == OFFAL_CELL_KG[which(OFFAL_CELL_KG > 0)[1]]) {
+        saveRDS(pt, "outputs/offal_cell_geometry.rds")   # site is identical across kg
+      }
+    }
+    save_progress()
+  }
 }
 
 # =============================================================================
@@ -206,10 +280,13 @@ cat("\n=== All configurations ===\n"); print(as.data.frame(res_df), row.names = 
 # Interpolate the offal amount at which each metric reaches the WITHOUT_BB target.
 # Both mechanisms now titrate an AMOUNT (kg), under different access assumptions.
 mech_desc <- c(
-  spatial_kg      = "total kg dumped near the colony; birds find it randomly (BrdData)",
-  perbird_offal_kg = sprintf("kg per accessing bird per trip; %.0f%% of adults always feed on it",
-                             100 * ACCESS_FRAC_FIXED)
+  spatial_kg       = "total kg dumped near the colony; birds find it randomly (BrdData)",
+  perbird_offal_kg = sprintf("kg per bird per trip; %.0f%% feed on offal WHERE THEY ALREADY FORAGE (food effect only)",
+                             100 * ACCESS_FRAC_FIXED),
+  offalcell_kg     = sprintf("kg in a cell near the colony; %.0f%% of adults FLY THERE (food + shorter trip + no displacement)",
+                             100 * OFFAL_CELL_ACCESS_FRAC)
 )
+mech_desc <- mech_desc[names(mech_desc) %in% unique(res_df$mechanism)]
 # Interpolate safely: a metric that never varies (e.g. survival pinned at 1.0 --
 # no adult ever dies at calibrated prey) has no curve to invert, so approx()
 # would error. Report it as "not binding" instead.
@@ -247,7 +324,7 @@ for (mech in names(mech_desc)) {
 # =============================================================================
 library(ggplot2)
 plot_df <- res_df %>%
-  dplyr::filter(mechanism %in% c("spatial_kg", "perbird_offal_kg")) %>%
+  dplyr::filter(mechanism %in% names(mech_desc)) %>%
   tidyr::pivot_longer(c(survival, productivity), names_to = "metric", values_to = "value")
 p <- ggplot(plot_df, aes(offal_amount, value, colour = metric)) +
   geom_point() + geom_line() +

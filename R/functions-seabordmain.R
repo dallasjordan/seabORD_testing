@@ -513,6 +513,24 @@ seabord <- function(Par, modPar, ordPar, switches, seamask, spadat1, spadat2,
 
     }
 
+    # > Offal-cell foraging: send the offal-access birds to Par$OffalCell on
+    # every trip, in BOTH seasons, overriding their sampled destinations (and any
+    # ORD displacement). They then fly the real distance to that cell and pick up
+    # its PreyMap/EnergyMap values like any other forager -- so this captures the
+    # shorter commute AND the fact that they no longer route past the windfarms.
+    # Par$OffalCell = NULL leaves destinations untouched.
+    if (!is.null(Par$OffalCell) && any(BirdType$data$offal_access)) {
+      oa_ids  <- BirdType$data$BirdID[BirdType$data$offal_access]
+      ts_cols <- paste0("t", seq_len(Species$data$seasonlength))
+      ts_cols <- intersect(ts_cols, names(FlightListA))
+      FlightListA[FlightListA$BirdID %in% oa_ids, ts_cols] <- Par$OffalCell
+      FlightListB[FlightListB$BirdID %in% oa_ids, ts_cols] <- Par$OffalCell
+      if (!switches$silent) {
+        print.noquote(paste0("Offal cell: ", length(oa_ids),
+                             " birds forced to forage at cell ", Par$OffalCell))
+      }
+    }
+
     #> Competition from 'other' birds (colonies not simulated) -----------------
 
     if (switches$modelmode == "scenario") {

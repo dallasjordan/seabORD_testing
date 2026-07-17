@@ -27,8 +27,23 @@ source("experiments/_setup_inputs.R")
 # =============================================================================
 # Config
 # =============================================================================
-POP_FRACTION <- 0.1     # keep small for a first pass; raise for final inference
-N_REPLICATES <- 10        # survival/productivity are stochastic -> use >=3, ideally >=20
+POP_FRACTION <- 0.1      # 10% of the Isle of May population (~580 birds)
+
+# Replication is split by STAGE, because the two questions need very different
+# precision (at ~7 min per rep, 10% pop, full season):
+#
+#  Stage 1 - BB impact (the reportable result). Annual survival's BB effect is
+#    only ~1-3 pp and AdultsSurvivingYr is a binomial draw (SE ~1.8 pp per rep
+#    at 10% pop), so it needs ~20 reps to reach ~0.4 pp precision.
+#    2 configs x 20 reps ~= 5 h.
+#  Stage 2 - offal compensation. Driven by productivity, whose BB effect is
+#    ~14 pp (far above the noise), so a few reps suffice.
+#    11 configs x 3 reps ~= 5 h.
+#
+# Running line-by-line: set N_REPLICATES before each stage.
+N_REPLICATES_BASELINE <- 20   # stage 1: without_BB / with_BB
+N_REPLICATES_SWEEP    <- 3    # stage 2: the offal sweeps
+N_REPLICATES <- N_REPLICATES_BASELINE
 
 OFFAL_KJ_PER_G <- 9      # offal quality (kJ/g available to kittiwakes)
 
@@ -108,15 +123,28 @@ run_config <- function(windfarms, label, mechanism, offal_amount,
   m$minutes <- round(as.numeric(Sys.time() - t0, units = "mins"), 1)
   message(sprintf("   annual survival=%.4f  mass loss=%.3f  productivity=%.4f  (%.1f min)",
                   m$survival, m$mass_loss, m$productivity, m$minutes))
+
+  # Keep the raw summary tibbles so ANY metric can be recomputed later without
+  # re-simulating. (BirdFlightMap is dropped -- a 3.5M-cell raster per config
+  # would bloat the file for no analytical gain.)
+  raw_store[[label]] <<- list(output_a0 = res$output_a0,
+                              output_c0 = res$output_c0,
+                              output_y0 = res$output_y0)
   m
 }
 
-results <- list()
-save_progress <- function() saveRDS(dplyr::bind_rows(results), "outputs/bb_compensation_results.rds")
+results   <- list()
+raw_store <- list()
+save_progress <- function() {
+  saveRDS(dplyr::bind_rows(results), "outputs/bb_compensation_results.rds")
+  saveRDS(raw_store,                  "outputs/bb_compensation_raw.rds")
+}
 
 # =============================================================================
-# 1 & 2. Baseline configurations
+# STAGE 1 (1 & 2). Baselines -- the reportable BB impact on survival AND
+# productivity. Run at high replication; this is the result you report.
 # =============================================================================
+N_REPLICATES <- N_REPLICATES_BASELINE
 results$without_bb <- run_config(WF_WITHOUT_BB, "without_BB", "none", 0); save_progress()
 results$with_bb    <- run_config(WF_WITH_BB,    "with_BB",    "none", 0); save_progress()
 
@@ -131,8 +159,9 @@ cat(sprintf("BB's cost         : survival %+.4f   productivity %+.4f   (the gap 
             results$with_bb$productivity - target_prod))
 
 # =============================================================================
-# 3a. Spatial offal near the colony -- sweep biomass
+# STAGE 2 (3a). Spatial offal near the colony -- sweep biomass
 # =============================================================================
+N_REPLICATES <- N_REPLICATES_SWEEP   # productivity-driven; fewer reps suffice
 for (kg in SPATIAL_OFFAL_KG) {
   if (kg == 0) { pm <- NULL; em <- NULL } else {
     area <- make_area_prey(

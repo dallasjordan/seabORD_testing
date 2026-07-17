@@ -72,11 +72,25 @@ names(BrdData) <- paste(SPA_CODE, "KI", sep = "_")
 COLONY_XY    <- c(spadat1$fltxy.E, spadat1$fltxy.N)
 COLONY_POINT <- sf::st_sfc(sf::st_point(COLONY_XY), crs = sf::st_crs(seamask))
 
-# ---- Base parameter lists (leave unmodified; experiments customise copies) ----
+# ---- Base parameter lists (experiments customise copies of these) ----
 Par      <- example_1_lists$Par
 modPar   <- example_1_lists$modPar
 ordPar   <- example_1_lists$ordPar
 switches <- example_1_lists$switches
 
+# ---- Displacement assumptions: NatureScot guidance ----
+# STUDY-WIDE, so every experiment inherits identical values and they cannot drift
+# between scripts. The package example ships 60% displacement -- a demo value,
+# NOT guidance -- which is why this is overridden here rather than left inherited.
+#   Prob_Displacement : share of birds that avoid windfarms (displacement-susceptible)
+#   FootprintBorder   : km added to the footprint to define the displacement zone
+#   Prob_Barrier      : share of DISPLACED birds that also detour around the farm.
+#                       Left at the package default -- set explicitly if your
+#                       guidance specifies a barrier rate.
+Par$Prob_Displacement  <- 0.30
+ordPar$FootprintBorder <- 2
+
 message("Setup loaded: calibrated Pmedian = ", CALIBRATED_PMEDIAN,
         " g/cell; colony at (", round(COLONY_XY[1]), ", ", round(COLONY_XY[2]), ").")
+message(sprintf("Displacement (NatureScot): %.0f%% of birds | barrier %.0f%% of those | footprint buffer %g km",
+                100 * Par$Prob_Displacement, 100 * Par$Prob_Barrier, ordPar$FootprintBorder))

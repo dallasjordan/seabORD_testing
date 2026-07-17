@@ -42,7 +42,7 @@ POP_FRACTION <- 0.1      # 10% of the Isle of May population (~580 birds)
 #
 # Running line-by-line: set N_REPLICATES before each stage.
 N_REPLICATES_BASELINE <- 20   # stage 1: without_BB / with_BB
-N_REPLICATES_SWEEP    <- 3    # stage 2: the offal sweeps
+N_REPLICATES_SWEEP    <- 10    # stage 2: the offal sweeps
 N_REPLICATES <- N_REPLICATES_BASELINE
 
 OFFAL_KJ_PER_G <- 9      # offal quality (kJ/g available to kittiwakes)
@@ -53,16 +53,8 @@ RUN_OFFAL_CELL <- TRUE    # stage 2c: offal cell near colony, birds FLY to it  <
 RUN_SPATIAL    <- FALSE   # stage 2a: offal spread near colony, found randomly
 RUN_PERBIRD    <- FALSE   # stage 2b: offal wherever birds forage (no travel effect)
 
-# --- Displacement: NatureScot guidance ---------------------------------------
-# 30% displacement, and a 2 km buffer around the windfarm footprint within which
-# birds are considered displaced (ordPar$FootprintBorder).
-# NOTE: the example default was 60% displacement -- a demo value, not guidance.
-Par$Prob_Displacement <- 0.30
-ordPar$FootprintBorder <- 2      # km, footprint + 2 km = the displacement zone
-# Prob_Barrier is the share of DISPLACED birds that also detour around the farm.
-# Left at the example default; set explicitly if your guidance specifies it.
-cat(sprintf("Displacement: %.0f%% of birds | barrier: %.0f%% of those | footprint buffer: %g km\n",
-            100*Par$Prob_Displacement, 100*Par$Prob_Barrier, ordPar$FootprintBorder))
+# Displacement (NatureScot: 30%, 2 km buffer) is set study-wide in
+# _setup_inputs.R so every experiment uses the same assumption.
 
 # Windfarm configurations (positional toggles resolved by load_windfarms)
 WF_WITHOUT_BB <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = FALSE)

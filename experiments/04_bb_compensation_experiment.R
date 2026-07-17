@@ -27,8 +27,8 @@ source("experiments/_setup_inputs.R")
 # =============================================================================
 # Config
 # =============================================================================
-POP_FRACTION <- 0.05     # keep small for a first pass; raise for final inference
-N_REPLICATES <- 3        # survival/productivity are stochastic -> use >=3, ideally >=20
+POP_FRACTION <- 0.1     # keep small for a first pass; raise for final inference
+N_REPLICATES <- 10        # survival/productivity are stochastic -> use >=3, ideally >=20
 
 OFFAL_KJ_PER_G <- 9      # offal quality (kJ/g available to kittiwakes)
 
@@ -166,19 +166,36 @@ mech_desc <- c(
   perbird_offal_kg = sprintf("kg per accessing bird per trip; %.0f%% of adults always feed on it",
                              100 * ACCESS_FRAC_FIXED)
 )
+# Interpolate safely: a metric that never varies (e.g. survival pinned at 1.0 --
+# no adult ever dies at calibrated prey) has no curve to invert, so approx()
+# would error. Report it as "not binding" instead.
+need_amount <- function(metric, amount, target) {
+  ok <- is.finite(metric) & is.finite(amount)
+  metric <- metric[ok]; amount <- amount[ok]
+  if (length(unique(metric)) < 2) {
+    return(list(value = NA_real_,
+                note = if (isTRUE(all.equal(unique(metric)[1], target)))
+                         "already at target (not binding)" else "no variation - cannot invert"))
+  }
+  if (target < min(metric) || target > max(metric)) {
+    return(list(value = NA_real_, note = "outside swept range - extend the sweep"))
+  }
+  list(value = approx(metric, amount, xout = target, ties = mean)$y, note = NA_character_)
+}
+
 for (mech in names(mech_desc)) {
   d <- dplyr::filter(res_df, mechanism == mech) %>% dplyr::arrange(offal_amount)
   if (nrow(d) < 2) next
-  need_surv <- approx(d$survival,     d$offal_amount, xout = target_surv, ties = mean)$y
-  need_prod <- approx(d$productivity, d$offal_amount, xout = target_prod, ties = mean)$y
+  s <- need_amount(d$survival,     d$offal_amount, target_surv)
+  p <- need_amount(d$productivity, d$offal_amount, target_prod)
+  fmt <- function(r) if (is.na(r$value)) r$note else paste(round(r$value, 3), "kg")
   cat(sprintf("\n[%s]  (%s)\n", mech, mech_desc[[mech]]))
-  cat(sprintf("   kg to restore survival    : %s\n",
-              ifelse(is.na(need_surv), "outside swept range", round(need_surv, 3))))
-  cat(sprintf("   kg to restore productivity: %s\n",
-              ifelse(is.na(need_prod), "outside swept range", round(need_prod, 3))))
-  cat(sprintf("   => OFFAL NEEDED TO OFFSET BERWICK BANK: %s kg (whichever metric needs more)\n",
-              ifelse(all(is.na(c(need_surv, need_prod))), "extend the sweep",
-                     round(max(need_surv, need_prod, na.rm = TRUE), 3))))
+  cat(sprintf("   to restore survival    : %s\n", fmt(s)))
+  cat(sprintf("   to restore productivity: %s\n", fmt(p)))
+  binding <- suppressWarnings(max(c(s$value, p$value), na.rm = TRUE))
+  cat(sprintf("   => OFFAL NEEDED TO OFFSET BERWICK BANK: %s\n",
+              if (is.finite(binding)) paste(round(binding, 3), "kg (binding metric)")
+              else "not resolved - see notes above"))
 }
 
 # =============================================================================

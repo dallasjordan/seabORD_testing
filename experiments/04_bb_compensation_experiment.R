@@ -54,16 +54,27 @@ colony_point <- COLONY_POINT   # from _setup_inputs.R
 # =============================================================================
 # Helpers
 # =============================================================================
-# Pull scen-season survival & productivity, averaged over replicates.
+# Pull scen-season demographics, averaged over replicates.
+#
+# SURVIVAL: use output_y0$AdultsSurvivingYr -- the ANNUAL survival probability
+# seabORD derives from end-of-season mass loss (via the species massloss_*/
+# basesurv_* lookups). This is the real demographic pathway (~0.75).
+# Do NOT use output_a0's N_alive_ad: no adult dies during the 30-day chick-rearing
+# season at realistic prey, so within-season survival is 1.0 by construction and
+# carries no signal (confirmed: zero adult deaths in the package's own scenario
+# AND calibration example outputs).
 get_metrics <- function(res) {
+  y <- dplyr::bind_rows(res$output_y0) %>%
+    dplyr::filter(Season == "scen", !is.na(AdultsSurvivingYr))
   a <- dplyr::bind_rows(res$output_a0) %>%
     dplyr::filter(Season == "scen", !is.na(t)) %>%
     dplyr::group_by(Rep) %>% dplyr::filter(t == max(t)) %>% dplyr::ungroup() %>%
-    dplyr::mutate(surv = N_alive_ad / (N_alive_ad + N_dead_ad))
+    dplyr::mutate(ml = (BM_adult_t0.mn - BM_adult.mn) / BM_adult_t0.mn)
   c0 <- dplyr::bind_rows(res$output_c0) %>%
     dplyr::filter(Season == "scen", !is.na(t)) %>%
     dplyr::group_by(Rep) %>% dplyr::filter(t == max(t)) %>% dplyr::ungroup()
-  tibble::tibble(survival     = mean(a$surv, na.rm = TRUE),
+  tibble::tibble(survival     = mean(y$AdultsSurvivingYr, na.rm = TRUE),  # annual
+                 mass_loss    = mean(a$ml, na.rm = TRUE),                 # drives survival
                  productivity = mean(c0$ChicksPerNest, na.rm = TRUE))
 }
 
@@ -95,8 +106,8 @@ run_config <- function(windfarms, label, mechanism, offal_amount,
   m <- get_metrics(res)
   m$label <- label; m$mechanism <- mechanism; m$offal_amount <- offal_amount
   m$minutes <- round(as.numeric(Sys.time() - t0, units = "mins"), 1)
-  message(sprintf("   survival=%.4f productivity=%.4f (%.1f min)",
-                  m$survival, m$productivity, m$minutes))
+  message(sprintf("   annual survival=%.4f  mass loss=%.3f  productivity=%.4f  (%.1f min)",
+                  m$survival, m$mass_loss, m$productivity, m$minutes))
   m
 }
 
@@ -111,9 +122,13 @@ results$with_bb    <- run_config(WF_WITH_BB,    "with_BB",    "none", 0); save_p
 
 target_surv <- results$without_bb$survival
 target_prod <- results$without_bb$productivity
-cat(sprintf("\nTARGET (without BB): survival=%.4f productivity=%.4f\n", target_surv, target_prod))
-cat(sprintf("WITH BB           : survival=%.4f productivity=%.4f  (the gap to close)\n\n",
-            results$with_bb$survival, results$with_bb$productivity))
+cat(sprintf("\nTARGET (without BB): annual survival=%.4f  mass loss=%.3f  productivity=%.4f\n",
+            target_surv, results$without_bb$mass_loss, target_prod))
+cat(sprintf("WITH BB           : annual survival=%.4f  mass loss=%.3f  productivity=%.4f\n",
+            results$with_bb$survival, results$with_bb$mass_loss, results$with_bb$productivity))
+cat(sprintf("BB's cost         : survival %+.4f   productivity %+.4f   (the gap to close)\n\n",
+            results$with_bb$survival - target_surv,
+            results$with_bb$productivity - target_prod))
 
 # =============================================================================
 # 3a. Spatial offal near the colony -- sweep biomass

@@ -84,7 +84,26 @@ PERBIRD_OFFAL_KG  <- c(0, 0.2, 0.5, 1, 2, 5)         # offal available per acces
 # it buys is offal energy PLUS avoided travel/displacement, not offal alone.
 OFFAL_CELL_ACCESS_FRAC <- 0.47   # share of adults that fly to the offal cell
 OFFAL_CELL_RADIUS_M    <- 20000  # search radius around the colony for the site
-OFFAL_CELL_KG          <- c(0, 0.2, 0.5, 1, 2, 5)   # offal in the cell (kg), swept
+# Offal DEPOSITED in the patch over the season (kg). kg = 0 means no patch at
+# all -- birds forage exactly as in with_BB (the no-intervention reference).
+OFFAL_CELL_KG          <- c(0, 100, 500, 1000, 2000, 4000)
+
+# HOW THE DEPOSIT IS CONVERTED TO A CELL VALUE ---------------------------------
+# seabORD's prey does not deplete: whatever value a cell holds is offered IN FULL
+# to EVERY bird, EVERY timestep. So putting the whole deposit in the cell would
+# let ~273 birds each eat the entire 2000 kg, 30 times over -- the patch would
+# feed the colony many times its actual mass, and every deposit >= ~1 kg would
+# saturate identically.
+#
+# To make "kg deposited" mean what it says, the deposit is spread across the
+# bird-visits it has to support:
+#
+#     standing g per bird per timestep = deposit_g / (n_access_birds * seasonlength)
+#
+# so that TOTAL consumption over the season equals the deposit. Set
+# SPREAD_DEPOSIT <- FALSE to instead place the raw deposit in the cell (the
+# non-depleting interpretation), e.g. to reproduce earlier runs.
+SPREAD_DEPOSIT <- TRUE
 
 colony_point <- COLONY_POINT   # from _setup_inputs.R
 
@@ -233,21 +252,40 @@ if (RUN_PERBIRD) {
 # there, so this captures the offal energy AND the shorter commute AND the fact
 # that they no longer route past Berwick Bank (so displacement cannot touch them).
 if (RUN_OFFAL_CELL) {
-  cat(sprintf("\n2c: %.0f%% of adults fly to an offal cell near the colony; sweeping the amount.\n",
-              100 * OFFAL_CELL_ACCESS_FRAC))
+  # Number of bird-visits the deposit must support: accessing birds x timesteps.
+  n_adults   <- 2 * ceiling(Par$Npairspercol * POP_FRACTION)
+  n_access   <- round(n_adults * OFFAL_CELL_ACCESS_FRAC)
+  bird_visits <- n_access * spdat$seasonlength
+  cat(sprintf("\n2c: %.0f%% of adults (%d of %d) fly to the offal patch; sweeping the DEPOSIT.\n",
+              100 * OFFAL_CELL_ACCESS_FRAC, n_access, n_adults))
+  if (SPREAD_DEPOSIT) {
+    cat(sprintf("    Deposit spread over %d bird-visits (%d birds x %d timesteps),\n",
+                bird_visits, n_access, spdat$seasonlength))
+    cat("    so total consumption over the season equals the deposit.\n")
+  } else {
+    cat("    Raw deposit placed in the cell (non-depleting interpretation).\n")
+  }
   for (kg in OFFAL_CELL_KG) {
     key <- paste0("offalcell_", kg, "kg")
     if (kg == 0) {
-      # No offal: nobody is sent anywhere -- a clean "with BB, no intervention" point.
+      # No offal deposited -> no patch, nobody is sent anywhere. Birds forage
+      # exactly as in with_BB. This is the "no intervention" reference point.
       results[[key]] <- run_config(WF_WITH_BB, key, "offalcell_kg", kg)
     } else {
+      # Convert the season-long DEPOSIT into the standing amount the cell should
+      # hold, so that total consumption over the season equals the deposit
+      # (see SPREAD_DEPOSIT above). Offal is added ON TOP of the cell's ordinary
+      # prey, so the patch is never poorer than a normal cell.
+      standing_g <- if (SPREAD_DEPOSIT) (kg * 1000) / bird_visits else kg * 1000
+      cat(sprintf("    %6.0f kg deposit -> %8.1f g standing in the cell (+ %g g baseline)\n",
+                  kg, standing_g, CALIBRATED_PMEDIAN))
       # Site the cell on the most-visited reachable sea cell within
-      # OFFAL_CELL_RADIUS_M of the colony, and load it with kg of offal at 9 kJ/g.
+      # OFFAL_CELL_RADIUS_M of the colony, holding that standing amount at 9 kJ/g.
       pt <- make_point_prey(
         seamask = seamask, center = COLONY_POINT,
         Pmedian_value = CALIBRATED_PMEDIAN, energy_prey_model = spdat$energy_prey,
         BrdData = BrdData, min_distance = 0, max_distance = OFFAL_CELL_RADIUS_M,
-        target_mass_g = kg * 1000, offal_energy_density = OFFAL_KJ_PER_G)
+        target_mass_g = standing_g, offal_energy_density = OFFAL_KJ_PER_G)
       results[[key]] <- run_config(
         WF_WITH_BB, key, "offalcell_kg", kg,
         PreyMap = pt$PreyMap, EnergyMap = pt$EnergyMap,

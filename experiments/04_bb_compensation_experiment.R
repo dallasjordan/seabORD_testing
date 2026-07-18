@@ -88,22 +88,27 @@ OFFAL_CELL_RADIUS_M    <- 20000  # search radius around the colony for the site
 # all -- birds forage exactly as in with_BB (the no-intervention reference).
 OFFAL_CELL_KG          <- c(0, 100, 500, 1000, 2000, 4000)
 
-# HOW THE DEPOSIT IS CONVERTED TO A CELL VALUE ---------------------------------
-# seabORD's prey does not deplete: whatever value a cell holds is offered IN FULL
-# to EVERY bird, EVERY timestep. So putting the whole deposit in the cell would
-# let ~273 birds each eat the entire 2000 kg, 30 times over -- the patch would
-# feed the colony many times its actual mass, and every deposit >= ~1 kg would
-# saturate identically.
+# OFFAL_CELL_KG is the amount dropped EVERY TIMESTEP (a boat going out daily),
+# not a season total. It is NOT divided across timesteps.
 #
-# To make "kg deposited" mean what it says, the deposit is spread across the
-# bird-visits it has to support:
+# HOW A DAILY DEPOSIT BECOMES A CELL VALUE -------------------------------------
+# seabORD offers a cell's value IN FULL to EVERY bird independently -- there is no
+# depletion between birds. So placing the raw daily drop in the cell lets each of
+# the ~273 accessing birds eat the WHOLE drop: 273 birds x 100 kg = 27 tonnes
+# consumed from a 100 kg drop. Every deposit >= ~1 kg then saturates identically,
+# which is exactly why the earlier sweep returned the same productivity for
+# 0.2, 0.5, 1, 2 and 5 kg.
 #
-#     standing g per bird per timestep = deposit_g / (n_access_birds * seasonlength)
+# SHARE_DEPOSIT = TRUE divides the daily drop by the number of birds feeding on
+# it, so the birds collectively consume what was actually dropped:
 #
-# so that TOTAL consumption over the season equals the deposit. Set
-# SPREAD_DEPOSIT <- FALSE to instead place the raw deposit in the cell (the
-# non-depleting interpretation), e.g. to reproduce earlier runs.
-SPREAD_DEPOSIT <- TRUE
+#     standing g per bird = daily_deposit_g / n_access_birds
+#
+# This keeps the sweep physically meaningful AND produces a real dose-response
+# (100-4000 kg/day -> ~366-14650 g per bird, i.e. foraging times that genuinely
+# differ). Set FALSE to place the raw drop in the cell instead, in which case
+# expect every point above ~1 kg to be identical.
+SHARE_DEPOSIT <- TRUE
 
 colony_point <- COLONY_POINT   # from _setup_inputs.R
 
@@ -252,18 +257,15 @@ if (RUN_PERBIRD) {
 # there, so this captures the offal energy AND the shorter commute AND the fact
 # that they no longer route past Berwick Bank (so displacement cannot touch them).
 if (RUN_OFFAL_CELL) {
-  # Number of bird-visits the deposit must support: accessing birds x timesteps.
-  n_adults   <- 2 * ceiling(Par$Npairspercol * POP_FRACTION)
-  n_access   <- round(n_adults * OFFAL_CELL_ACCESS_FRAC)
-  bird_visits <- n_access * spdat$seasonlength
-  cat(sprintf("\n2c: %.0f%% of adults (%d of %d) fly to the offal patch; sweeping the DEPOSIT.\n",
+  # Birds feeding on each daily drop.
+  n_adults <- 2 * ceiling(Par$Npairspercol * POP_FRACTION)
+  n_access <- round(n_adults * OFFAL_CELL_ACCESS_FRAC)
+  cat(sprintf("\n2c: %.0f%% of adults (%d of %d) fly to the offal patch; sweeping the DAILY deposit.\n",
               100 * OFFAL_CELL_ACCESS_FRAC, n_access, n_adults))
-  if (SPREAD_DEPOSIT) {
-    cat(sprintf("    Deposit spread over %d bird-visits (%d birds x %d timesteps),\n",
-                bird_visits, n_access, spdat$seasonlength))
-    cat("    so total consumption over the season equals the deposit.\n")
+  if (SHARE_DEPOSIT) {
+    cat(sprintf("    Each daily drop is shared between the %d birds feeding on it.\n", n_access))
   } else {
-    cat("    Raw deposit placed in the cell (non-depleting interpretation).\n")
+    cat("    Raw daily drop placed in the cell; each bird may eat all of it.\n")
   }
   for (kg in OFFAL_CELL_KG) {
     key <- paste0("offalcell_", kg, "kg")
@@ -272,13 +274,12 @@ if (RUN_OFFAL_CELL) {
       # exactly as in with_BB. This is the "no intervention" reference point.
       results[[key]] <- run_config(WF_WITH_BB, key, "offalcell_kg", kg)
     } else {
-      # Convert the season-long DEPOSIT into the standing amount the cell should
-      # hold, so that total consumption over the season equals the deposit
-      # (see SPREAD_DEPOSIT above). Offal is added ON TOP of the cell's ordinary
-      # prey, so the patch is never poorer than a normal cell.
-      standing_g <- if (SPREAD_DEPOSIT) (kg * 1000) / bird_visits else kg * 1000
-      cat(sprintf("    %6.0f kg deposit -> %8.1f g standing in the cell (+ %g g baseline)\n",
-                  kg, standing_g, CALIBRATED_PMEDIAN))
+      # The daily drop, converted to what one bird can take from it. Offal is
+      # added ON TOP of the cell's ordinary prey, so the patch is never poorer
+      # than a normal cell.
+      standing_g <- if (SHARE_DEPOSIT) (kg * 1000) / n_access else kg * 1000
+      cat(sprintf("    %6.0f kg/day -> %9.0f g per bird (cell total %9.0f g)\n",
+                  kg, standing_g, standing_g + CALIBRATED_PMEDIAN))
       # Site the cell on the most-visited reachable sea cell within
       # OFFAL_CELL_RADIUS_M of the colony, holding that standing amount at 9 kJ/g.
       pt <- make_point_prey(

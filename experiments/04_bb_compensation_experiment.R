@@ -45,6 +45,10 @@ N_REPLICATES_BASELINE <- 20   # stage 1: without_BB / with_BB
 N_REPLICATES_SWEEP    <- 10    # stage 2: the offal sweeps
 N_REPLICATES <- N_REPLICATES_BASELINE
 
+# Per-bird foraging destinations: needed to verify the offal forcing actually
+# fired and to analyse where birds fed. Adds rows but they are just integers.
+switches$saveperbirddest <- TRUE
+
 OFFAL_KJ_PER_G <- 9      # offal quality (kJ/g available to kittiwakes)
 
 # --- Which analyses to run (toggle off the ones you don't need) ---------------
@@ -60,11 +64,11 @@ RUN_PERBIRD    <- FALSE   # stage 2b: offal wherever birds forage (no travel eff
 WF_WITHOUT_BB <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = FALSE)
 WF_WITH_BB    <- c(INCAP = TRUE, SEAGREEN = TRUE, NEART = TRUE, BERWICK = TRUE)
 
-# --- 3a. SPATIAL offal near the colony; birds find it RANDOMLY (via BrdData) ---
+# --- 2a. SPATIAL offal near the colony; birds find it RANDOMLY (via BrdData) ---
 COLONY_RADIUS_M  <- 20000                            # disc radius around the Isle of May
 SPATIAL_OFFAL_KG <- c(0, 2000, 5000, 10000, 20000)   # total biomass dumped (kg)
 
-# --- 3b. Offal cell that a GUARANTEED fraction of birds always feed on ---------
+# --- 2b. Offal cell that a GUARANTEED fraction of birds always feed on ---------
 # ACCESS_FRAC is a fixed ASSUMPTION here (not swept): this share of adults feeds
 # on the offal every trip. We sweep the offal AMOUNT to find how much is needed.
 ACCESS_FRAC_FIXED <- 0.47                            # 47% of adults always feed on offal
@@ -76,7 +80,7 @@ PERBIRD_OFFAL_KG  <- c(0, 0.2, 0.5, 1, 2, 5)         # offal available per acces
 # --- 2c. OFFAL CELL near the colony that birds FLY TO (the main scenario) ------
 # We dump offal in one cell near the Isle of May and OFFAL_CELL_ACCESS_FRAC of
 # adults forage there on every trip instead of their normal destination. Unlike
-# 3b, they really travel to that cell, so this also captures:
+# 2b, they really travel to that cell, so this also captures:
 #   - the shorter commute (flight is ~23% of daily energy at 4.7 h),
 #   - the fact that they no longer route past Berwick Bank, so displacement
 #     cannot touch them.
@@ -84,7 +88,7 @@ PERBIRD_OFFAL_KG  <- c(0, 0.2, 0.5, 1, 2, 5)         # offal available per acces
 # it buys is offal energy PLUS avoided travel/displacement, not offal alone.
 OFFAL_CELL_ACCESS_FRAC <- 0.47   # share of adults that fly to the offal cell
 OFFAL_CELL_RADIUS_M    <- 20000  # search radius around the colony for the site
-# Offal DEPOSITED in the patch over the season (kg). kg = 0 means no patch at
+# Offal deposited in the patch over the season (kg). kg = 0 means no patch at
 # all -- birds forage exactly as in with_BB (the no-intervention reference).
 OFFAL_CELL_KG          <- c(0, 100, 500, 1000, 2000, 4000)
 
@@ -174,9 +178,11 @@ run_config <- function(windfarms, label, mechanism, offal_amount,
   # Keep the raw summary tibbles so ANY metric can be recomputed later without
   # re-simulating. (BirdFlightMap is dropped -- a 3.5M-cell raster per config
   # would bloat the file for no analytical gain.)
-  raw_store[[label]] <<- list(output_a0 = res$output_a0,
-                              output_c0 = res$output_c0,
-                              output_y0 = res$output_y0)
+  # Keep EVERYTHING seabord returned except the BirdFlightMap, which is a
+  # 3.5M-cell raster per config (~28 MB) and adds nothing we analyse. Storing the
+  # rest means any metric can be recomputed later without re-simulating -- we
+  # have already been forced into a full re-run once by discarding data.
+  raw_store[[label]] <<- res[setdiff(names(res), "BirdFlightMap")]
   m
 }
 
@@ -188,7 +194,7 @@ save_progress <- function() {
 }
 
 # =============================================================================
-# STAGE 1 (1 & 2). Baselines -- the reportable BB impact on survival AND
+# STAGE 1. Baselines -- the reportable BB impact on survival AND
 # productivity. Run at high replication to detect adult survival changes.
 # =============================================================================
 if (RUN_BASELINES) {
@@ -210,7 +216,7 @@ if (!is.null(results$without_bb)) {
 }
 
 # =============================================================================
-# STAGE 2 (3a). Spatial offal near the colony -- sweep biomass
+# STAGE 2a. Spatial offal near the colony -- sweep biomass
 # =============================================================================
 N_REPLICATES <- N_REPLICATES_SWEEP   # productivity-driven; fewer reps suffice
 if (RUN_SPATIAL) for (kg in SPATIAL_OFFAL_KG) {

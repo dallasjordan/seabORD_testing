@@ -282,33 +282,64 @@ mech_desc <- mech_desc[names(mech_desc) %in% unique(res_df$mechanism)]
 # Interpolate safely: a metric that never varies (e.g. survival pinned at 1.0 --
 # no adult ever dies at calibrated prey) has no curve to invert, so approx()
 # would error. Report it as "not binding" instead.
-need_amount <- function(metric, amount, target) {
+# How much offal is needed to reach `target`? Guards against three traps:
+#  (a) the metric has no real deficit to close (e.g. survival, which BB does not
+#      measurably affect) -- interpolating its noise yields a spurious answer;
+#  (b) the metric plateaus below the target -- more offal cannot help, so
+#      "extend the sweep" would be wrong advice;
+#  (c) the metric genuinely never reaches the target within the swept range.
+# `deficit` is the gap this metric actually has to close (target - with_BB).
+need_amount <- function(metric, amount, target, deficit = NULL, noise = 0.01) {
   ok <- is.finite(metric) & is.finite(amount)
   metric <- metric[ok]; amount <- amount[ok]
-  if (length(unique(metric)) < 2) {
+  if (length(metric) < 2) return(list(value = NA_real_, note = "too few points"))
+
+  # (a) no meaningful deficit -> nothing to restore; any fit would be noise
+  if (!is.null(deficit) && abs(deficit) < noise) {
     return(list(value = NA_real_,
-                note = if (isTRUE(all.equal(unique(metric)[1], target)))
-                         "already at target (not binding)" else "no variation - cannot invert"))
+                note = sprintf("no deficit to close (BB effect %+.4f, within noise) - not binding", deficit)))
   }
-  if (target < min(metric) || target > max(metric)) {
-    return(list(value = NA_real_, note = "outside swept range - extend the sweep"))
+  if (target >= min(metric) && target <= max(metric)) {
+    return(list(value = approx(metric, amount, xout = target, ties = mean)$y, note = NA_character_))
   }
-  list(value = approx(metric, amount, xout = target, ties = mean)$y, note = NA_character_)
+  # (b) plateaued below target? compare the last third of the sweep to its peak
+  o <- order(amount); m <- metric[o]; a <- amount[o]
+  tail_n <- max(2, ceiling(length(m) / 3))
+  tail_m <- utils::tail(m, tail_n)
+  plateaued <- (max(m) - min(tail_m)) < noise && max(m) < target
+  if (plateaued) {
+    return(list(value = NA_real_,
+                note = sprintf("PLATEAUS at %.4f, short of target %.4f - more offal cannot close the gap (closes %.0f%% of it)",
+                               max(m), target,
+                               100 * (max(m) - m[1]) / (target - m[1]))))
+  }
+  list(value = NA_real_, note = "target not reached within swept range - extend the sweep")
 }
+
+# BB's actual deficit in each metric -- a metric with no deficit is not binding.
+deficit_surv <- target_surv - results$with_bb$survival
+deficit_prod <- target_prod - results$with_bb$productivity
+cat(sprintf("\nBB deficit to close: survival %+.4f | productivity %+.4f\n",
+            deficit_surv, deficit_prod))
 
 for (mech in names(mech_desc)) {
   d <- dplyr::filter(res_df, mechanism == mech) %>% dplyr::arrange(offal_amount)
   if (nrow(d) < 2) next
-  s <- need_amount(d$survival,     d$offal_amount, target_surv)
-  p <- need_amount(d$productivity, d$offal_amount, target_prod)
+  s <- need_amount(d$survival,     d$offal_amount, target_surv, deficit = deficit_surv)
+  p <- need_amount(d$productivity, d$offal_amount, target_prod, deficit = deficit_prod)
   fmt <- function(r) if (is.na(r$value)) r$note else paste(round(r$value, 3), "kg")
   cat(sprintf("\n[%s]  (%s)\n", mech, mech_desc[[mech]]))
   cat(sprintf("   to restore survival    : %s\n", fmt(s)))
   cat(sprintf("   to restore productivity: %s\n", fmt(p)))
+  # Only metrics with a real deficit AND a resolved amount can be binding.
   binding <- suppressWarnings(max(c(s$value, p$value), na.rm = TRUE))
-  cat(sprintf("   => OFFAL NEEDED TO OFFSET BERWICK BANK: %s\n",
-              if (is.finite(binding)) paste(round(binding, 3), "kg (binding metric)")
-              else "not resolved - see notes above"))
+  if (is.finite(binding)) {
+    cat(sprintf("   => OFFAL NEEDED TO OFFSET BERWICK BANK: %.3f kg (binding metric)\n", binding))
+  } else {
+    cat("   => OFFAL CANNOT OFFSET BERWICK BANK at this access fraction.\n")
+    cat("      The limiting factor is how many birds reach the offal, not how much\n")
+    cat("      is provided -- raise OFFAL_CELL_ACCESS_FRAC rather than the amount.\n")
+  }
 }
 
 # =============================================================================

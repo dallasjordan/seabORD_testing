@@ -24,9 +24,17 @@
 
 source("experiments/_setup_inputs.R")
 
-RAW <- "outputs/bb_compensation_raw.rds"
+# Stage 2c writes its own raw file (04 keeps the superseded pre-SHARE_DEPOSIT
+# sweep out of it by never writing to the legacy file). Prefer it; fall back to
+# the legacy file only if the new sweep has not been run yet.
+RAW <- "outputs/bb_compensation_2c_raw.rds"
+if (!file.exists(RAW)) {
+  RAW <- "outputs/bb_compensation_raw.rds"
+  message("Stage 2c raw output not found; falling back to the legacy file ", RAW)
+}
 stopifnot(file.exists(RAW))
 raw <- readRDS(RAW)
+cat("Reading:", RAW, "\n")
 
 ilogit <- function(x) exp(x) / (1 + exp(x))
 logit  <- function(p) log(p / (1 - p))

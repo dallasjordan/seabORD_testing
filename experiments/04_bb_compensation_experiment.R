@@ -137,21 +137,23 @@ offal_access_frac <- function(kg, n_adults_real) {
 
 # Offal dropped EVERY DAY (kg). kg = 0 means no patch at all -- birds forage
 # exactly as in with_BB (the no-intervention reference).
-OFFAL_CELL_KG          <- c(0, 5, 10, 25, 50, 100, 250, 500, 1000, 1500, 2000, 4000)
+OFFAL_CELL_KG          <- c(0, 50, 100, 150, 200, 300, 500, 1000, 2000, 4000)
 # What each dose now resolves to (real colony 5796 adults, 580 simulated):
 #
 #     kg/day    meals   access frac   birds fed (of 580)   standing g/bird
-#          5       14         0.002                    1               400
-#         10       29         0.005                    3               267
-#         25       71         0.012                    7               286
 #         50      143         0.025                   14               286
 #        100      286         0.049                   29               276
-#        250      714         0.123                   71               282
+#        150      429         0.074                   43               279
+#        200      571         0.099                   57               281
+#        300      857         0.148                   86               279
 #        500     1429         0.246                  143               280
 #       1000     2857         0.493                  286               280
-#       1500     4286         0.739                  429               280
 #       2000     5714         0.986                  572               280
 #       4000    11429         1.000 (capped)         580               552
+#
+# 100-300 kg brackets the crossing predicted below. Doses under ~25 kg/day were
+# dropped: they feed 1-7 birds of 580, which cannot move productivity above its
+# ~0.006 replicate SE, so they cost 75 min each to reproduce the with_BB point.
 #
 # Two consequences worth understanding before reading any result:
 #  - Standing stock per bird is ~280 g at every dose BY CONSTRUCTION -- that is
@@ -535,7 +537,7 @@ if (RUN_OFFAL_CELL) {
 # 4. Analysis: how much offal restores the target?
 # =============================================================================
 res_df <- dplyr::bind_rows(results)
-readr::write_csv(res_df, "outputs/bb_compensation_results.csv")
+readr::write_csv(res_df, "outputs/bb_compensation_2c_results.csv")
 cat("\n=== All configurations ===\n"); print(as.data.frame(res_df), row.names = FALSE)
 
 # Interpolate the offal amount at which each metric reaches the WITHOUT_BB target.
@@ -687,6 +689,6 @@ p <- ggplot(plot_df, aes(offal_amount, productivity)) +
   labs(title = "Offal needed to offset Berwick Bank (productivity)",
        subtitle = "green dashed = without-BB target | red dotted = with-BB | ribbon = +/-1 SE across reps | access fraction derived from the deposit",
        x = "Offal deposited per day (kg)", y = "Chicks per nest (proportion of nests fledging)")
-ggsave("outputs/bb_compensation_doseresponse.png", p, width = 10, height = 5, dpi = 150)
+ggsave("outputs/bb_compensation_2c_doseresponse.png", p, width = 10, height = 5, dpi = 150)
 
-cat("\nDONE. Results: outputs/bb_compensation_results.{rds,csv}; plot: outputs/bb_compensation_doseresponse.png\n")
+cat("\nDONE. Results: outputs/bb_compensation_2c_results.{rds,csv}; plot: outputs/bb_compensation_2c_doseresponse.png\n")

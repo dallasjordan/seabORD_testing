@@ -70,6 +70,16 @@ RUN_SPATIAL    <- FALSE   # stage 2a: offal spread near colony, found randomly
 RUN_PERBIRD    <- FALSE   # stage 2b: offal wherever birds forage (no travel effect)
 RUN_OFFAL_CELL <- TRUE    # stage 2c: offal cell near colony, birds FLY to it  <- main scenario
 
+# Re-measure every config instead of resuming the ones already in this sweep's
+# output files. Normally FALSE -- an interrupted run should pick up where it left
+# off. Set it TRUE if the model, the calibration or the deposit accounting has
+# changed and the stored configs are no longer comparable with new ones.
+#
+# Assigned via get0() so that setting it in the console BEFORE sourcing survives:
+#   FORCE_RERUN <- TRUE; source("experiments/04_bb_compensation_experiment.R")
+# A plain `FORCE_RERUN <- FALSE` here would silently overwrite that.
+FORCE_RERUN <- get0("FORCE_RERUN", ifnotfound = FALSE)
+
 # Displacement (NatureScot: 30%, 2 km buffer) is set study-wide in
 # _setup_inputs.R so every experiment uses the same assumption.
 
@@ -470,8 +480,8 @@ if (RUN_OFFAL_CELL) {
   for (kg in OFFAL_CELL_KG) {
     key <- paste0("offalcell_", kg, "kg")
     # Resume: everything in this sweep's own files is valid, so skip it.
-    # Set FORCE_RERUN <- TRUE before sourcing to re-measure everything.
-    if (!isTRUE(get0("FORCE_RERUN", ifnotfound = FALSE)) && key %in% done) {
+    # FORCE_RERUN (declared with the other toggles at the top) overrides this.
+    if (!isTRUE(FORCE_RERUN) && key %in% done) {
       message(sprintf("--- %s: already measured, skipping ---", key))
       next
     }

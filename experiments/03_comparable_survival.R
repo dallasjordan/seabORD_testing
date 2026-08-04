@@ -1,56 +1,49 @@
 ################################################################################
-## Experiment 05: recompute adult annual survival on a COMMON reference
+## Experiment 03: adult annual survival on a common reference
 ##
-## WHY THIS IS NEEDED
-## seabORD's AdultsSurvivingYr is a genuine proportion of adults surviving
-## (Survived_modr / npop), but the per-bird probability is computed against the
-## SAME CONFIG's own base season:
+## seabORD's AdultsSurvivingYr is a real proportion, but the per-bird probability
+## is computed against the SAME CONFIG's own base season:
 ##
-##     if (season == "base") meanbm <- mean(base BM_adult)
-##     else                  meanbm <- mean(YearBirds$base$BM_adult)
+##     meanbm     = mean(that config's base-season BM_adult)
 ##     P(survive) = ilogit( logit(basesurv) + (BM_adult - meanbm) * beta )
 ##
 ## So it measures the ORD effect WITHIN a config. Any intervention present in
-## BOTH seasons -- such as offal, which is dropped regardless of Berwick Bank --
-## lifts base and scen equally and cancels out. That is why survival looked flat
-## across the offal sweep.
+## BOTH seasons -- offal is dropped regardless of Berwick Bank -- lifts base and
+## scen equally and cancels out, which is why survival looked flat across the
+## sweep.
 ##
-## This script recomputes survival for every config against ONE fixed reference
-## mass, so the numbers are comparable BETWEEN configs and can be reported as
-## "BB's survival cost" and "the offal's survival benefit".
+## This recomputes survival for every config against ONE fixed reference mass,
+## so the numbers are comparable BETWEEN configs.
 ##
-## Runs on saved output only -- no re-simulation required.
+## Runs on saved output only -- no re-simulation.
 ################################################################################
 
 source("experiments/_setup_inputs.R")
 
-# Stage 2c writes its own raw file (04 keeps the superseded pre-SHARE_DEPOSIT
-# sweep out of it by never writing to the legacy file). Prefer it; fall back to
-# the legacy file only if the new sweep has not been run yet.
-RAW <- "outputs/bb_compensation_2c_raw.rds"
+RAW <- sprintf("outputs/bb_compensation_2c_%d_raw.rds", COLONY_PAIRS)
 if (!file.exists(RAW)) {
-  RAW <- "outputs/bb_compensation_raw.rds"
-  message("Stage 2c raw output not found; falling back to the legacy file ", RAW)
+  stop("No raw output for a ", COLONY_PAIRS, "-pair colony (", RAW, "). ",
+       "Run 02_bb_compensation_experiment.R first, or set COLONY_PAIRS in ",
+       "_setup_inputs.R to match an existing run.")
 }
-stopifnot(file.exists(RAW))
 raw <- readRDS(RAW)
 cat("Reading:", RAW, "\n")
 
 ilogit <- function(x) exp(x) / (1 + exp(x))
 logit  <- function(p) log(p / (1 - p))
 
-beta      <- spdat$beta
-bs_modr   <- spdat$basesurv_modr
-bs_good   <- spdat$basesurv_good
-bs_poor   <- spdat$basesurv_poor
-ml_modr   <- spdat$massloss_modr / 100   # 10% -> 0.10
-ml_good   <- spdat$massloss_good / 100
-ml_poor   <- spdat$massloss_poor / 100
+beta    <- spdat$beta
+bs_modr <- spdat$basesurv_modr
+bs_good <- spdat$basesurv_good
+bs_poor <- spdat$basesurv_poor
+ml_modr <- spdat$massloss_modr / 100
+ml_good <- spdat$massloss_good / 100
+ml_poor <- spdat$massloss_poor / 100
 
 cat(sprintf("KI: beta=%g | basesurv poor/modr/good = %.2f/%.2f/%.2f | massloss %.0f/%.0f/%.0f%%\n",
             beta, bs_poor, bs_modr, bs_good, 100*ml_poor, 100*ml_modr, 100*ml_good))
 
-# ---- Pull end-of-season adult mass per config/season -------------------------
+# --- End-of-season adult mass per config --------------------------------------
 grab <- function(nm, season) {
   y <- dplyr::bind_rows(raw[[nm]]$output_y0) %>%
     dplyr::filter(Season == season, !is.na(BM_adult.mn))
@@ -61,20 +54,18 @@ grab <- function(nm, season) {
                  native_surv = mean(y$AdultsSurvivingYr, na.rm = TRUE))
 }
 
-configs <- names(raw)
-dat <- dplyr::bind_rows(lapply(configs, grab, season = "scen"))
+dat <- dplyr::bind_rows(lapply(names(raw), grab, season = "scen"))
 base_ref <- grab("without_BB", "base")
 if (is.null(base_ref)) stop("without_BB base season not found -- cannot set the reference.")
 REF <- base_ref$mass_end
-cat(sprintf("\nCommon reference mass = without_BB BASE season mean = %.2f g\n\n", REF))
+cat(sprintf("\nCommon reference mass = without_BB base season mean = %.2f g\n\n", REF))
 
-# ---- (a) survival on a common reference --------------------------------------
-# Same formula seabORD uses, but every config measured against the SAME mass.
 dat <- dat %>%
   dplyr::mutate(
     mass_loss   = (mass_t0 - mass_end) / mass_t0,
+    # Same formula seabORD uses, but every config against the SAME mass.
     surv_common = ilogit(logit(bs_modr) + (mass_end - REF) * beta),
-    # (b) independent cross-check: interpolate basesurv from the mass-loss bands
+    # Independent cross-check: interpolate basesurv from the mass-loss bands.
     surv_band   = approx(x = c(ml_good, ml_modr, ml_poor),
                          y = c(bs_good, bs_modr, bs_poor),
                          xout = mass_loss, rule = 2)$y
@@ -82,13 +73,13 @@ dat <- dat %>%
 
 out <- dat %>% dplyr::select(config, mass_end, mass_loss, native_surv, surv_common, surv_band)
 cat("=== Adult annual survival, recomputed on a common reference ===\n")
-cat("native_surv = seabORD's AdultsSurvivingYr (referenced to each config's own base)\n")
-cat("surv_common = same formula, all configs vs the single reference mass\n")
-cat("surv_band   = independent check: basesurv interpolated from mass loss\n\n")
+cat("native_surv = seabORD's AdultsSurvivingYr (each config vs its own base)\n")
+cat("surv_common = same formula, all configs vs one reference mass\n")
+cat("surv_band   = independent check, basesurv interpolated from mass loss\n\n")
 print(as.data.frame(out %>% dplyr::mutate(dplyr::across(where(is.numeric), ~round(.x, 4)))),
       row.names = FALSE)
 
-# ---- Headline contrasts ------------------------------------------------------
+# --- Headline contrasts -------------------------------------------------------
 gv <- function(cfg, col) { v <- out[[col]][out$config == cfg]; if (length(v)) v else NA_real_ }
 if (!is.na(gv("with_BB", "surv_common"))) {
   cat(sprintf("\nBB's survival cost : %+.4f (common ref) | %+.4f (band method)\n",
@@ -107,8 +98,9 @@ if (nrow(offal) > 0) {
               gv("without_BB","surv_common")))
 }
 
-readr::write_csv(out, "outputs/comparable_survival.csv")
-cat("\nSaved: outputs/comparable_survival.csv\n")
+OUT_CSV <- sprintf("outputs/comparable_survival_%d.csv", COLONY_PAIRS)
+readr::write_csv(out, OUT_CSV)
+cat(sprintf("\nSaved: %s\n", OUT_CSV))
 cat("NOTE: computed from MEAN mass, so it ignores within-population spread\n")
 cat("      (mean of survival != survival of the mean). Fine for comparing\n")
 cat("      configs; do not quote as an absolute colony survival rate.\n")

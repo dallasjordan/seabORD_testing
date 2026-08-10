@@ -104,3 +104,4 @@ cat(sprintf("\nSaved: %s\n", OUT_CSV))
 cat("NOTE: computed from MEAN mass, so it ignores within-population spread\n")
 cat("      (mean of survival != survival of the mean). Fine for comparing\n")
 cat("      configs; do not quote as an absolute colony survival rate.\n")
+
